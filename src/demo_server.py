@@ -122,7 +122,9 @@ class Handler(SimpleHTTPRequestHandler):
             lane_result = _lane_model.predict(frame, conf=0.20, imgsz=320, verbose=False)[0]
             lane = [{"class_name": lane_result.names[int(c)], "confidence": float(p), "xyxy": [round(float(v), 2) for v in box]} for c, p, box in zip(lane_result.boxes.cls.tolist(), lane_result.boxes.conf.tolist(), lane_result.boxes.xyxy.tolist())]
         scene = []
-        scene_path = ROOT / "runs" / "segment" / "runs" / "mapillary_seg" / "train_more_cpu" / "weights" / "best.pt"
+        scene_path = ROOT / "runs" / "segment" / "runs" / "segment" / "runs" / "mapillary_seg" / "train_signs_cpu" / "weights" / "best.pt"
+        if not scene_path.exists():
+            scene_path = ROOT / "runs" / "segment" / "runs" / "mapillary_seg" / "train_signs_cpu" / "weights" / "best.pt"
         if scene_path.exists():
             if _scene_model is None:
                 _scene_model = YOLO(str(scene_path))
@@ -179,7 +181,7 @@ class Handler(SimpleHTTPRequestHandler):
         issues.extend({"type": "ground_litter", **item} for item in litter)
         if container:
             issues.append({"type": "container", **container})
-        self._json({"issues": issues, "road_damage": road, "lane_markings": lane, "scene_segments": scene, "ground_litter": litter, "container": container, "image_base64": base64.b64encode(encoded.tobytes()).decode("ascii"), "litter_model": "TACO YOLO11s hazır model", "lane_model": "CeyMo YOLO11n (20 epoch pilot)" if lane_path.exists() else None, "scene_model": "Mapillary YOLO11n-seg (5 epoch pilot)" if scene_path.exists() else None})
+        self._json({"issues": issues, "road_damage": road, "lane_markings": lane, "scene_segments": scene, "ground_litter": litter, "container": container, "image_base64": base64.b64encode(encoded.tobytes()).decode("ascii"), "litter_model": "TACO YOLO11s hazır model", "lane_model": "CeyMo YOLO11n (20 epoch pilot)" if lane_path.exists() else None, "scene_model": "Mapillary YOLO11n-seg (pano/tabela/konteyner pilot)" if scene_path.exists() else None})
 
     def _json(self, payload, status=200):
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")

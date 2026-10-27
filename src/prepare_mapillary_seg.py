@@ -13,9 +13,16 @@ import numpy as np
 
 SRC = Path("data/mapillary_small")
 OUT = Path("data/mapillary_seg")
-# YOLO sınıfları: yol, kaldırım, şerit/işaret, çöp konteyneri.
-TARGETS = {21: 0, 24: 1, **{i: 2 for i in range(35, 59)}, 104: 3}
-NAMES = ["road", "sidewalk", "lane_marking", "trash_can"]
+# YOLO sınıfları: yol, kaldırım, şerit/işaret, konteyner, pano ve tabela.
+TARGETS = {
+    21: 0,
+    24: 1,
+    **{i: 2 for i in range(35, 59)},
+    104: 3,
+    66: 4,
+    **{i: 5 for i in [78, 79, 80, 81, 82, 83, *range(96, 104)]},
+}
+NAMES = ["road", "sidewalk", "lane_marking", "trash_can", "billboard", "sign"]
 CONFIG = json.loads((SRC / "config_v2.0.json").read_text(encoding="utf-8"))
 COLORS = {i: tuple(reversed(item["color"])) for i, item in enumerate(CONFIG["labels"])}
 
@@ -57,7 +64,7 @@ def main() -> None:
             shutil.copy2(image, OUT / "images" / split / image.name)
             convert_mask(SRC / "training" / "v2.0" / "labels" / f"{image.stem}.png", OUT / "labels" / split / f"{image.stem}.txt")
     (OUT / "data.yaml").write_text(
-        f"path: {OUT.resolve().as_posix()}\ntrain: images/train\nval: images/val\nnc: 4\nnames: {NAMES}\n",
+        f"path: {OUT.resolve().as_posix()}\ntrain: images/train\nval: images/val\nnc: {len(NAMES)}\nnames: {NAMES}\n",
         encoding="utf-8",
     )
     print(f"Hazır: train={len(images[:split_at])}, val={len(images[split_at:])}")
