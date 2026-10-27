@@ -50,6 +50,14 @@ python -m src.road_damage --source data/processed/frames/frame_00000000.jpg
 
 Çıktılar `data/outputs/road_damage/annotated/` altında işaretli görüntü, `detections.jsonl` altında makine tarafından okunabilir kayıt olarak oluşur. Modelin benchmark deposu: https://huggingface.co/SreekarAditya/yolo-rdd2022-benchmark
 
+## Geçici demo sitesi
+
+```powershell
+python -m src.demo_server
+```
+
+Ardından `http://127.0.0.1:8000` adresini açın. Site örnek tespitleri haritada ve listede gösterir; kalıcı veritabanı kullanmaz.
+
 ## Tasarım kararları
 
 İlk sürümde kare örnekleme saniye aralığı yerine kare adımıyla yapılır; böylece düşük FPS videolarda davranış öngörülebilir kalır. GPS eşleştirmesi için kare zamanı video başlangıç zamanına eklenir. GPS yan dosyasında başlangıç zamanı yoksa ilk GPS satırı video başlangıcı kabul edilir ve bu karar `--video-start` ile değiştirilebilir.

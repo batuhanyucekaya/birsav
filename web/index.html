@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Kent Sorunları - Demo</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    :root{font-family:Segoe UI,Arial,sans-serif;color:#17202a;background:#f4f6f8}*{box-sizing:border-box}body{margin:0}.top{background:#123b59;color:#fff;padding:14px 22px;display:flex;justify-content:space-between;align-items:center}.top h1{font-size:19px;margin:0}.top span{font-size:12px;opacity:.8}.layout{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:14px;padding:14px;max-width:1500px;margin:auto}.panel{background:#fff;border:1px solid #dfe5ea;border-radius:10px;box-shadow:0 2px 8px #17324d12}.controls{padding:12px;display:flex;gap:8px;flex-wrap:wrap}.controls select,.controls input,.controls button{padding:8px;border:1px solid #cbd5df;border-radius:6px;background:#fff}.controls button{background:#1d6fa5;color:#fff;border:0;cursor:pointer}.map{height:560px;border-radius:0 0 10px 10px}.list{max-height:650px;overflow:auto}.card{padding:12px;border-bottom:1px solid #e7ebef;cursor:pointer}.card:hover{background:#f7fafc}.card h3{margin:0 0 5px;font-size:15px}.meta{color:#627384;font-size:12px;line-height:1.55}.badge{display:inline-block;padding:3px 7px;border-radius:12px;font-size:11px;background:#e8f2f8;color:#14527a;margin-left:5px}.empty{padding:24px;color:#687887;text-align:center}.hint{padding:10px 12px;font-size:12px;color:#647483;background:#fffbe8;border-bottom:1px solid #eee2ad}@media(max-width:900px){.layout{grid-template-columns:1fr}.map{height:420px}}
+  </style>
+</head>
+<body>
+  <header class="top"><h1>Çöp Aracı Kamerasıyla Kent Sorunları</h1><span>DEMO - veriler RAM'de tutulur</span></header>
+  <main class="layout">
+    <section class="panel"><div class="hint">Bu demo örnek tespitlerle açılır. Sayfa yenilenince durumlar sıfırlanır.</div><div class="controls"><select id="type"><option value="">Tüm türler</option></select><select id="status"><option value="">Tüm durumlar</option><option>Yeni</option><option>Personel onayladı</option><option>Birime iletildi</option><option>Çözüldü</option><option>Yanlış tespit</option></select><input id="date" type="date"><button id="reset">Filtreleri temizle</button></div><div id="map" class="map"></div></section>
+    <aside class="panel"><div class="controls"><strong id="count">0 tespit</strong></div><div id="cards" class="list"></div></aside>
+  </main>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const demo=[
+      {id:1,type:'Asfalt bozukluğu',status:'Yeni',confidence:.91,lat:41.0121,lng:28.9762,time:'2026-10-27T09:10:00',size:'2.1 m²'},
+      {id:2,type:'Yerde çöp',status:'Personel onayladı',confidence:.87,lat:41.0152,lng:28.9791,time:'2026-10-27T09:24:00',size:'',},
+      {id:3,type:'Çöp konteyneri doluluğu',status:'Birime iletildi',confidence:.84,lat:41.0098,lng:28.9818,time:'2026-10-27T09:42:00',size:'Taşmış'},
+      {id:4,type:'Moloz ve atık bırakılması',status:'Yeni',confidence:.79,lat:41.0180,lng:28.9730,time:'2026-10-27T10:05:00',size:'',}
+    ];
+    const map=L.map('map').setView([41.013,28.978],14);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);const markers=new Map();
+    const typeEl=document.querySelector('#type'),statusEl=document.querySelector('#status'),dateEl=document.querySelector('#date'),cards=document.querySelector('#cards');[...new Set(demo.map(x=>x.type))].forEach(t=>typeEl.add(new Option(t,t)));
+    function render(){markers.forEach(m=>m.remove());markers.clear();const filtered=demo.filter(x=>(!typeEl.value||x.type===typeEl.value)&&(!statusEl.value||x.status===statusEl.value)&&(!dateEl.value||x.time.startsWith(dateEl.value)));document.querySelector('#count').textContent=filtered.length+' tespit';cards.innerHTML='';if(!filtered.length){cards.innerHTML='<div class="empty">Filtreye uyan tespit yok.</div>';return}filtered.forEach(x=>{const marker=L.marker([x.lat,x.lng]).addTo(map).bindPopup(`<b>${x.type}</b><br>Güven: %${Math.round(x.confidence*100)}<br>${x.status}`);markers.set(x.id,marker);const el=document.createElement('article');el.className='card';el.innerHTML=`<h3>${x.type}<span class="badge">${x.status}</span></h3><div class="meta">Güven: %${Math.round(x.confidence*100)} · ${new Date(x.time).toLocaleString('tr-TR')}<br>Konum: ${x.lat.toFixed(5)}, ${x.lng.toFixed(5)}${x.size?'<br>Not: '+x.size:''}</div>`;el.onclick=()=>{map.setView([x.lat,x.lng],17);marker.openPopup()};cards.appendChild(el)})}
+    [typeEl,statusEl,dateEl].forEach(x=>x.addEventListener('change',render));document.querySelector('#reset').onclick=()=>{typeEl.value='';statusEl.value='';dateEl.value='';render()};render();
+  </script>
+</body></html>
