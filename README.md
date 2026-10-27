@@ -40,6 +40,16 @@ python -m src.prepare_rdd --source data/external/RDD2022_United_States --output 
 
 Kaynak ve lisans notları `data/external/SOURCES.md` dosyasındadır. Hazır veri eğitim için, gerçek rota verisi ise son test için ayrılmalıdır.
 
+## Hazır yol hasarı modeliyle çıkarım
+
+RDD2022 üzerinde eğitilmiş model ağırlığı `models/yolo12s_seed0_best.pt` altında tutulur ve Git'e alınmaz. Görsel veya video üzerinde çalıştırmak için:
+
+```powershell
+python -m src.road_damage --source data/processed/frames/frame_00000000.jpg
+```
+
+Çıktılar `data/outputs/road_damage/annotated/` altında işaretli görüntü, `detections.jsonl` altında makine tarafından okunabilir kayıt olarak oluşur. Modelin benchmark deposu: https://huggingface.co/SreekarAditya/yolo-rdd2022-benchmark
+
 ## Tasarım kararları
 
 İlk sürümde kare örnekleme saniye aralığı yerine kare adımıyla yapılır; böylece düşük FPS videolarda davranış öngörülebilir kalır. GPS eşleştirmesi için kare zamanı video başlangıç zamanına eklenir. GPS yan dosyasında başlangıç zamanı yoksa ilk GPS satırı video başlangıcı kabul edilir ve bu karar `--video-start` ile değiştirilebilir.

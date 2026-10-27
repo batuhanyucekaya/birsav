@@ -16,4 +16,6 @@ data/ready/
 *.db
 .env
 tmp/
+models/*.pt
+runs/
 
