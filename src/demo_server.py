@@ -321,7 +321,12 @@ class Handler(SimpleHTTPRequestHandler):
                         counts["ground_litter"] += 1; frame_events.append({"type": "ground_litter", "confidence": round(item["confidence"], 3), "class_name": item["class_name"]})
                         x1, y1, x2, y2 = [int(v) for v in item["box"]]; cv2.rectangle(blurred, (x1, y1), (x2, y2), (0, 0, 255), 3)
                     for item in [x for x in scene_tracks if x["hits"] >= 1 and x["missing"] <= 3]:
-                        counts["scene"] += 1; frame_events.append({"type": item["class_name"], "confidence": round(item["confidence"], 3), "class_name": item["class_name"]})
+                        counts["scene"] += 1
+                        sx1, sy1, sx2, sy2 = item["box"]
+                        scene_event = {"type": item["class_name"], "confidence": round(item["confidence"], 3), "class_name": item["class_name"]}
+                        if item["class_name"] in {"billboard", "sign"}:
+                            scene_event.update({"width_px": round(max(0, sx2 - sx1), 1), "height_px": round(max(0, sy2 - sy1), 1), "area_px": round(max(0, sx2 - sx1) * max(0, sy2 - sy1), 1)})
+                        frame_events.append(scene_event)
                         x1, y1, x2, y2 = [int(v) for v in item["box"]]; cv2.rectangle(blurred, (x1, y1), (x2, y2), (180, 0, 180), 2)
                     if frame_events:
                         events.append({"time_sec": round(frame_idx / fps, 2), "items": frame_events})
