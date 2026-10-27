@@ -20,7 +20,8 @@ TARGETS = {
     **{i: 2 for i in range(35, 59)},
     104: 3,
     66: 4,
-    **{i: 5 for i in [78, 79, 80, 81, 82, 83, *range(96, 104)]},
+    78: 4,  # object--sign--advertisement (reklam panosu)
+    **{i: 5 for i in [79, 80, 81, 82, 83, *range(96, 104)]},
 }
 NAMES = ["road", "sidewalk", "lane_marking", "trash_can", "billboard", "sign"]
 CONFIG = json.loads((SRC / "config_v2.0.json").read_text(encoding="utf-8"))
