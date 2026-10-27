@@ -57,6 +57,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=Path, default=SRC)
     parser.add_argument("--output", type=Path, default=OUT)
+    parser.add_argument("--include-building", action="store_true", help="Mapillary Building sınıfını 7. sınıf olarak ekle")
     args = parser.parse_args()
     source, output = args.source, args.output
     config_path = source / "config_v2.0.json"
@@ -64,6 +65,11 @@ def main() -> None:
         config_path = SRC / "config_v2.0.json"
     config = json.loads(config_path.read_text(encoding="utf-8"))
     colors = {i: tuple(reversed(item["color"])) for i, item in enumerate(config["labels"])}
+    targets = dict(TARGETS)
+    names = list(NAMES)
+    if args.include_building:
+        targets[27] = 6  # construction--structure--building
+        names.append("building")
     if output.exists():
         shutil.rmtree(output)
     images = sorted((source / "training" / "images").glob("*.jpg"))
@@ -86,7 +92,7 @@ def main() -> None:
                 mask = cv2.resize(mask, (int(mask.shape[1] * scale), int(mask.shape[0] * scale)), interpolation=cv2.INTER_NEAREST)
             height, width = mask.shape[:2]
             lines = []
-            for source_id, target_id in TARGETS.items():
+            for source_id, target_id in targets.items():
                 binary = np.all(mask == np.array(colors[source_id], dtype=np.uint8), axis=2).astype(np.uint8)
                 contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
                 for contour in contours:
@@ -97,7 +103,7 @@ def main() -> None:
                         lines.append(f"{target_id} " + " ".join(f"{x / width:.6f} {y / height:.6f}" for x, y in polygon))
             label_path.write_text("\n".join(lines), encoding="utf-8")
     (output / "data.yaml").write_text(
-        f"path: {output.resolve().as_posix()}\ntrain: images/train\nval: images/val\nnc: {len(NAMES)}\nnames: {NAMES}\n",
+        f"path: {output.resolve().as_posix()}\ntrain: images/train\nval: images/val\nnc: {len(names)}\nnames: {names}\n",
         encoding="utf-8",
     )
     print(f"Hazır: train={len(images[:split_at])}, val={len(images[split_at:])}")

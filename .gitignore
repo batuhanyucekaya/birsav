@@ -26,5 +26,6 @@ data/ceymo_medium/
 datasets/
 data/mapillary_seg_expanded/
 data/mapillary_seg_combined/
+data/mapillary_seg_building/
 yolo11n.pt
 
