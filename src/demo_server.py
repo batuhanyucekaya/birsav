@@ -256,7 +256,7 @@ class Handler(SimpleHTTPRequestHandler):
                     if scene_result:
                         for c, p, box in zip(scene_result.boxes.cls.tolist(), scene_result.boxes.conf.tolist(), scene_result.boxes.xyxy.tolist()):
                             name = scene_result.names[int(c)]
-                            if float(p) < {"sidewalk": .08, "billboard": .12, "sign": .15}.get(name, .20): continue
+                            if float(p) < {"sidewalk": .08, "billboard": .12, "sign": .15, "trash_can": .30}.get(name, .20): continue
                             scene_current.append({"kind": "scene", "class_name": name, "confidence": float(p), "box": box})
                     road_tracks = _smooth_boxes(road_tracks, road_current, match_iou=0.25, alpha=0.35, max_missing=3)
                     litter_tracks = _smooth_boxes(litter_tracks, litter_current, match_iou=0.18, alpha=0.35, max_missing=3)
@@ -363,7 +363,7 @@ class Handler(SimpleHTTPRequestHandler):
                 _scene_model = YOLO(str(scene_path))
             # Küçük pano/kaldırım nesneleri için temel eşiği düşük tutup sınıfa göre filtreliyoruz.
             scene_result = _scene_model.predict(frame, conf=0.08, imgsz=640, verbose=False)[0]
-            thresholds = {"road": 0.20, "sidewalk": 0.08, "lane_marking": 0.15, "trash_can": 0.10, "billboard": 0.12, "sign": 0.15}
+            thresholds = {"road": 0.20, "sidewalk": 0.08, "lane_marking": 0.15, "trash_can": 0.30, "billboard": 0.12, "sign": 0.15}
             scene = []
             for c, p, box in zip(scene_result.boxes.cls.tolist(), scene_result.boxes.conf.tolist(), scene_result.boxes.xyxy.tolist()):
                 name, confidence = scene_result.names[int(c)], float(p)
@@ -380,8 +380,17 @@ class Handler(SimpleHTTPRequestHandler):
         if container_path.exists() and state_path.exists():
             if _container_model is None:
                 _container_model = YOLO(str(container_path))
-            candidate = _container_model.predict(frame, conf=0.25, imgsz=640, max_det=1, verbose=False)[0]
+            candidate = _container_model.predict(frame, conf=0.45, imgsz=640, max_det=1, verbose=False)[0]
             if len(candidate.boxes):
+                x1, y1, x2, y2 = candidate.boxes.xyxy[0].tolist()
+                bw, bh = max(1.0, x2 - x1), max(1.0, y2 - y1)
+                candidate_conf = float(candidate.boxes.conf[0])
+                candidate_area = (bw * bh) / max(1.0, frame.shape[0] * frame.shape[1])
+                candidate_ratio = bw / bh
+                valid_container_box = (candidate_conf >= 0.45 and 0.35 <= candidate_ratio <= 2.8 and 0.005 <= candidate_area <= 0.30)
+                if not valid_container_box:
+                    candidate = None
+            if candidate is not None and len(candidate.boxes):
                 if _container_state_model is None:
                     _container_state_model = YOLO(str(state_path))
                 state = _container_state_model.predict(frame, verbose=False)[0]
