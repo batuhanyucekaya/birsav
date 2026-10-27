@@ -13,6 +13,10 @@ from ultralytics import YOLO
 
 
 ROOT = Path(__file__).resolve().parent.parent
+_road_model = None
+_container_model = None
+_litter_model = None
+LITTER_CLASSES = {"bottle", "cup", "banana", "apple", "backpack", "handbag", "bowl", "fork", "knife", "spoon", "wine glass", "book", "umbrella", "sports ball"}
 
 
 class Handler(SimpleHTTPRequestHandler):
@@ -20,6 +24,9 @@ class Handler(SimpleHTTPRequestHandler):
         super().__init__(*args, directory=str(ROOT / "web"), **kwargs)
 
     def do_POST(self):
+        if self.path == "/api/analyze":
+            self._analyze()
+            return
         if self.path == "/api/container-classify":
             self._container_classify()
             return
@@ -59,10 +66,33 @@ class Handler(SimpleHTTPRequestHandler):
         if not model_path.exists():
             self._json({"error": "konteyner modeli bulunamadı; önce eğitim çalıştırılmalı"}, 503)
             return
-        model = YOLO(str(model_path))
+        global _container_model
+        if _container_model is None:
+            _container_model = YOLO(str(model_path))
+        model = _container_model
         result = model.predict(frame, verbose=False)[0]
         top1 = int(result.probs.top1)
         self._json({"model": "Konteyner YOLO11n sınıflandırıcı", "class_name": result.names[top1], "confidence": float(result.probs.top1conf)})
+
+    def _analyze(self):
+        form = cgi.FieldStorage(fp=self.rfile, headers=self.headers, environ={"REQUEST_METHOD": "POST", "CONTENT_TYPE": self.headers.get("Content-Type", "")})
+        if "image" not in form or not getattr(form["image"], "file", None):
+            self._json({"error": "image alanı gerekli"}, 400)
+            return
+        frame = cv2.imdecode(np.frombuffer(form["image"].file.read(), dtype=np.uint8), cv2.IMREAD_COLOR)
+        if frame is None:
+            self._json({"error": "görsel okunamadı"}, 400)
+            return
+        global _road_model, _litter_model
+        if _road_model is None:
+            _road_model = YOLO(str(ROOT / "models" / "yolo12s_seed0_best.pt"))
+        road_result = _road_model.predict(frame, conf=0.10, verbose=False)[0]
+        road = [{"class_name": road_result.names[int(c)], "confidence": float(p)} for c, p in zip(road_result.boxes.cls.tolist(), road_result.boxes.conf.tolist())]
+        if _litter_model is None:
+            _litter_model = YOLO("yolo11n.pt")
+        litter_result = _litter_model.predict(frame, conf=0.25, verbose=False)[0]
+        litter = [{"class_name": "litter_candidate", "source_object": litter_result.names[int(c)], "confidence": float(p)} for c, p in zip(litter_result.boxes.cls.tolist(), litter_result.boxes.conf.tolist()) if litter_result.names[int(c)] in LITTER_CLASSES]
+        self._json({"road_damage": road, "ground_litter": litter, "litter_model": "YOLO11n COCO baseline"})
 
     def _json(self, payload, status=200):
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
