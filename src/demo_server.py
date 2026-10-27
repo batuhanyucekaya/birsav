@@ -85,15 +85,13 @@ class Handler(SimpleHTTPRequestHandler):
         state = _container_state_model.predict(frame, verbose=False)[0]
         state_name = state.names[int(state.probs.top1)]
         state_conf = float(state.probs.top1conf)
-        if len(candidate.boxes):
-            box = candidate.boxes.xyxy[0].tolist()
-        else:
-            box = [0, 0, frame.shape[1], frame.shape[0]]
-        detections = [{"class_name": state_name, "confidence": state_conf, "xyxy": [round(float(v), 2) for v in box]}]
+        # Mevcut bootstrap etiketleri gerçek koordinat değil, tam-görsel kutusu
+        # olduğu için modelin ürettiği koordinatı kullanıcıya yanlış bir
+        # dikdörtgen olarak göstermiyoruz. Durum tahmini güvenilir kalır;
+        # gerçek kutu için ayrıca bbox etiketli veri gerekir.
+        detections = [{"class_name": state_name, "confidence": state_conf}]
         annotated = frame.copy()
-        x1, y1, x2, y2 = [int(v) for v in box]
-        cv2.rectangle(annotated, (x1, y1), (x2, y2), (0, 190, 255), 3)
-        cv2.putText(annotated, f"container: {state_name} ({state_conf:.0%})", (max(0, x1), max(30, y1 - 8)), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 190, 255), 2)
+        cv2.putText(annotated, f"container status: {state_name} ({state_conf:.0%})", (20, 35), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 190, 255), 2)
         ok, encoded = cv2.imencode(".jpg", annotated)
         if not ok:
             self._json({"error": "sonuç görseli üretilemedi"}, 500)
