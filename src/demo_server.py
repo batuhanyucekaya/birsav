@@ -41,6 +41,7 @@ def _iou(a, b):
 def _smooth_boxes(previous, current, match_iou=0.25, alpha=0.35, max_missing=2):
     """Kareler arası kutu titremesini azaltır; eski kutuları kısa süre korur."""
     used = set(); updated = []
+    next_id = max((int(old.get("track_id", 0)) for old in previous), default=0) + 1
     for old in previous:
         best_i, best = -1, 0.0
         for i, item in enumerate(current):
@@ -52,12 +53,13 @@ def _smooth_boxes(previous, current, match_iou=0.25, alpha=0.35, max_missing=2):
         if best_i >= 0 and best >= match_iou:
             new = current[best_i]; used.add(best_i)
             box = [old["box"][j] * (1 - alpha) + new["box"][j] * alpha for j in range(4)]
-            updated.append({**new, "box": box, "hits": old["hits"] + 1, "missing": 0})
+            updated.append({**new, "track_id": old.get("track_id", next_id), "box": box, "hits": old["hits"] + 1, "missing": 0})
         elif old["missing"] < max_missing:
             updated.append({**old, "missing": old["missing"] + 1})
     for i, item in enumerate(current):
         if i not in used:
-            updated.append({**item, "hits": 1, "missing": 0})
+            updated.append({**item, "track_id": next_id, "hits": 1, "missing": 0})
+            next_id += 1
     return updated
 
 
@@ -160,6 +162,7 @@ class Handler(SimpleHTTPRequestHandler):
         counts = {"privacy_frames": 0, "faces_blurred": 0, "plates_blurred": 0, "road_damage": 0, "ground_litter": 0, "scene": 0}
         events = []
         privacy_tracks = []
+        face_ids, plate_ids = set(), set()
         road_tracks, litter_tracks, scene_tracks = [], [], []
         frame_idx = 0
         try:
@@ -185,7 +188,9 @@ class Handler(SimpleHTTPRequestHandler):
                 stable_privacy = [x for x in privacy_tracks if x["hits"] >= 1 and x["missing"] <= 10]
                 if stable_privacy:
                     counts["privacy_frames"] += 1
-                    counts["faces_blurred"] += sum(x["kind"] == "face" for x in stable_privacy); counts["plates_blurred"] += sum(x["kind"] == "plate" for x in stable_privacy)
+                    face_ids.update(x["track_id"] for x in stable_privacy if x["kind"] == "face")
+                    plate_ids.update(x["track_id"] for x in stable_privacy if x["kind"] == "plate")
+                    counts["faces_blurred"] = len(face_ids); counts["plates_blurred"] = len(plate_ids)
                     for item in stable_privacy:
                         bx1, by1, bx2, by2 = item["box"]
                         pad_x, pad_y = (bx2 - bx1) * 0.18, (by2 - by1) * 0.18
