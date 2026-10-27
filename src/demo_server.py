@@ -187,7 +187,7 @@ class Handler(SimpleHTTPRequestHandler):
                     _, face_rows = _face_detector.detect(frame)
                     faces = [] if face_rows is None else [
                         (int(row[0]), int(row[1]), int(row[2]), int(row[3]))
-                        for row in face_rows if float(row[14]) >= 0.58 and row[2] >= 20 and row[3] >= 20
+                        for row in face_rows if float(row[14]) >= 0.65 and row[2] >= 20 and row[3] >= 20
                     ]
                     # İlk karelerde küçük/uzak yüzleri yakalamak için kısa büyütülmüş-kare takviyesi.
                     if not faces and frame_idx < 6:
@@ -197,7 +197,7 @@ class Handler(SimpleHTTPRequestHandler):
                         _, enlarged_rows = _face_detector.detect(enlarged)
                         faces = [] if enlarged_rows is None else [
                             (int(row[0] / scale), int(row[1] / scale), int(row[2] / scale), int(row[3] / scale))
-                            for row in enlarged_rows if float(row[14]) >= 0.52 and row[2] >= 24 and row[3] >= 24
+                            for row in enlarged_rows if float(row[14]) >= 0.60 and row[2] >= 24 and row[3] >= 24
                         ]
                 else:
                     faces = _face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=7, minSize=(32, 32)) if _face_cascade is not None and not _face_cascade.empty() else []
@@ -206,17 +206,28 @@ class Handler(SimpleHTTPRequestHandler):
                 valid_faces = []
                 for x, y, w, h in faces:
                     ratio = w / max(1, h)
-                    if 0.35 <= ratio <= 2.4 and (w * h) / frame_area <= 0.28:
+                    if 0.45 <= ratio <= 2.2 and (w * h) / frame_area <= 0.10 and w <= width * 0.32 and h <= height * 0.32:
                         valid_faces.append((x, y, w, h))
                 valid_plates = []
                 for x, y, w, h in plates:
                     ratio = w / max(1, h)
-                    if 1.2 <= ratio <= 8.0 and (w * h) / frame_area <= 0.12:
+                    if 1.8 <= ratio <= 6.5 and (w * h) / frame_area <= 0.035 and w <= width * 0.35 and h <= height * 0.14:
                         valid_plates.append((x, y, w, h))
                 privacy_current = [{"kind": "face", "box": [x, y, x + w, y + h]} for x, y, w, h in valid_faces]
                 privacy_current += [{"kind": "plate", "box": [x, y, x + w, y + h]} for x, y, w, h in valid_plates]
+                privacy_current = _dedupe_boxes(privacy_current, overlap=0.30)
                 privacy_tracks = _smooth_boxes(privacy_tracks, privacy_current, match_iou=0.25, alpha=0.45, max_missing=10)
                 stable_privacy = [x for x in privacy_tracks if x["hits"] >= 1 and x["missing"] <= 10]
+                # Hatalı çoklu kutuların ekranın büyük kısmını kaplamasını engelle.
+                safe_privacy = []
+                covered = 0.0
+                for item in sorted(stable_privacy, key=lambda x: (x["box"][2] - x["box"][0]) * (x["box"][3] - x["box"][1])):
+                    bx1, by1, bx2, by2 = item["box"]
+                    area = max(0, bx2 - bx1) * max(0, by2 - by1)
+                    if covered + area <= frame_area * 0.20:
+                        safe_privacy.append(item)
+                        covered += area
+                stable_privacy = safe_privacy
                 if stable_privacy:
                     counts["privacy_frames"] += 1
                     face_ids.update(x["track_id"] for x in stable_privacy if x["kind"] == "face")
