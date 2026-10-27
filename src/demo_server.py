@@ -28,6 +28,38 @@ VIDEO_DIR = ROOT / "tmp" / "video_results"
 VIDEO_DIR.mkdir(parents=True, exist_ok=True)
 
 
+def _iou(a, b):
+    ax1, ay1, ax2, ay2 = a; bx1, by1, bx2, by2 = b
+    ix1, iy1, ix2, iy2 = max(ax1, bx1), max(ay1, by1), min(ax2, bx2), min(ay2, by2)
+    inter = max(0, ix2 - ix1) * max(0, iy2 - iy1)
+    area_a = max(0, ax2 - ax1) * max(0, ay2 - ay1)
+    area_b = max(0, bx2 - bx1) * max(0, by2 - by1)
+    return inter / max(1, area_a + area_b - inter)
+
+
+def _smooth_boxes(previous, current, match_iou=0.25, alpha=0.35, max_missing=2):
+    """Kareler arası kutu titremesini azaltır; eski kutuları kısa süre korur."""
+    used = set(); updated = []
+    for old in previous:
+        best_i, best = -1, 0.0
+        for i, item in enumerate(current):
+            if old.get("class_name") and item.get("class_name") != old.get("class_name"):
+                continue
+            score = _iou(old["box"], item["box"])
+            if i not in used and score > best:
+                best_i, best = i, score
+        if best_i >= 0 and best >= match_iou:
+            new = current[best_i]; used.add(best_i)
+            box = [old["box"][j] * (1 - alpha) + new["box"][j] * alpha for j in range(4)]
+            updated.append({**new, "box": box, "hits": old["hits"] + 1, "missing": 0})
+        elif old["missing"] < max_missing:
+            updated.append({**old, "missing": old["missing"] + 1})
+    for i, item in enumerate(current):
+        if i not in used:
+            updated.append({**item, "hits": 1, "missing": 0})
+    return updated
+
+
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(ROOT / "web"), **kwargs)
@@ -122,6 +154,8 @@ class Handler(SimpleHTTPRequestHandler):
             _scene_model = YOLO(str(scene_path))
         counts = {"privacy_frames": 0, "faces_blurred": 0, "plates_blurred": 0, "road_damage": 0, "ground_litter": 0, "scene": 0}
         events = []
+        privacy_tracks = []
+        road_tracks, litter_tracks, scene_tracks = [], [], []
         frame_idx = 0
         try:
             while True:
@@ -132,11 +166,16 @@ class Handler(SimpleHTTPRequestHandler):
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 faces = _face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(24, 24)) if not _face_cascade.empty() else []
                 plates = _plate_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=4, minSize=(30, 12)) if not _plate_cascade.empty() else []
-                if len(faces) or len(plates):
+                privacy_current = [{"kind": "face", "box": [x, y, x + w, y + h]} for x, y, w, h in faces]
+                privacy_current += [{"kind": "plate", "box": [x, y, x + w, y + h]} for x, y, w, h in plates]
+                privacy_tracks = _smooth_boxes(privacy_tracks, privacy_current, match_iou=0.20, alpha=0.25)
+                stable_privacy = [x for x in privacy_tracks if x["hits"] >= 2 and x["missing"] == 0]
+                if stable_privacy:
                     counts["privacy_frames"] += 1
-                    counts["faces_blurred"] += len(faces); counts["plates_blurred"] += len(plates)
-                    for x, y, w, h in list(faces) + list(plates):
-                        x1, y1, x2, y2 = max(0, int(x)), max(0, int(y)), min(width, int(x + w)), min(height, int(y + h))
+                    counts["faces_blurred"] += sum(x["kind"] == "face" for x in stable_privacy); counts["plates_blurred"] += sum(x["kind"] == "plate" for x in stable_privacy)
+                    for item in stable_privacy:
+                        x1, y1, x2, y2 = [max(0, int(v)) for v in item["box"]]
+                        x2, y2 = min(width, x2), min(height, y2)
                         roi = blurred[y1:y2, x1:x2]
                         if roi.size:
                             blurred[y1:y2, x1:x2] = cv2.GaussianBlur(roi, (0, 0), 21)
@@ -145,19 +184,29 @@ class Handler(SimpleHTTPRequestHandler):
                     litter_result = _litter_model.predict(blurred, conf=0.35, verbose=False)[0]
                     scene_result = _scene_model.predict(blurred, conf=0.12, imgsz=640, verbose=False)[0] if _scene_model else None
                     frame_events = []
+                    road_current, litter_current, scene_current = [], [], []
                     for c, p, box in zip(road_result.boxes.cls.tolist(), road_result.boxes.conf.tolist(), road_result.boxes.xyxy.tolist()):
-                        counts["road_damage"] += 1; frame_events.append({"type": "road_damage", "confidence": round(float(p), 3), "class_name": road_result.names[int(c)]})
-                        x1, y1, x2, y2 = [int(v) for v in box]; cv2.rectangle(blurred, (x1, y1), (x2, y2), (0, 0, 255), 3)
+                        road_current.append({"kind": "road_damage", "class_name": road_result.names[int(c)], "confidence": float(p), "box": box})
                     for c, p, box in zip(litter_result.boxes.cls.tolist(), litter_result.boxes.conf.tolist(), litter_result.boxes.xyxy.tolist()):
                         if litter_result.names[int(c)] not in LITTER_CLASSES: continue
-                        counts["ground_litter"] += 1; frame_events.append({"type": "ground_litter", "confidence": round(float(p), 3), "class_name": litter_result.names[int(c)]})
-                        x1, y1, x2, y2 = [int(v) for v in box]; cv2.rectangle(blurred, (x1, y1), (x2, y2), (0, 0, 255), 3)
+                        litter_current.append({"kind": "ground_litter", "class_name": litter_result.names[int(c)], "confidence": float(p), "box": box})
                     if scene_result:
                         for c, p, box in zip(scene_result.boxes.cls.tolist(), scene_result.boxes.conf.tolist(), scene_result.boxes.xyxy.tolist()):
                             name = scene_result.names[int(c)]
                             if float(p) < {"sidewalk": .08, "billboard": .12, "sign": .15}.get(name, .20): continue
-                            counts["scene"] += 1; frame_events.append({"type": name, "confidence": round(float(p), 3), "class_name": name})
-                            x1, y1, x2, y2 = [int(v) for v in box]; cv2.rectangle(blurred, (x1, y1), (x2, y2), (180, 0, 180), 2)
+                            scene_current.append({"kind": "scene", "class_name": name, "confidence": float(p), "box": box})
+                    road_tracks = _smooth_boxes(road_tracks, road_current, match_iou=0.30, alpha=0.30)
+                    litter_tracks = _smooth_boxes(litter_tracks, litter_current, match_iou=0.20, alpha=0.30)
+                    scene_tracks = _smooth_boxes(scene_tracks, scene_current, match_iou=0.30, alpha=0.30)
+                    for item in [x for x in road_tracks if x["hits"] >= 2 and x["missing"] == 0]:
+                        counts["road_damage"] += 1; frame_events.append({"type": "road_damage", "confidence": round(item["confidence"], 3), "class_name": item["class_name"]})
+                        x1, y1, x2, y2 = [int(v) for v in item["box"]]; cv2.rectangle(blurred, (x1, y1), (x2, y2), (0, 0, 255), 3)
+                    for item in [x for x in litter_tracks if x["hits"] >= 2 and x["missing"] == 0]:
+                        counts["ground_litter"] += 1; frame_events.append({"type": "ground_litter", "confidence": round(item["confidence"], 3), "class_name": item["class_name"]})
+                        x1, y1, x2, y2 = [int(v) for v in item["box"]]; cv2.rectangle(blurred, (x1, y1), (x2, y2), (0, 0, 255), 3)
+                    for item in [x for x in scene_tracks if x["hits"] >= 2 and x["missing"] == 0]:
+                        counts["scene"] += 1; frame_events.append({"type": item["class_name"], "confidence": round(item["confidence"], 3), "class_name": item["class_name"]})
+                        x1, y1, x2, y2 = [int(v) for v in item["box"]]; cv2.rectangle(blurred, (x1, y1), (x2, y2), (180, 0, 180), 2)
                     if frame_events:
                         events.append({"time_sec": round(frame_idx / fps, 2), "items": frame_events})
                 writer.write(blurred)
