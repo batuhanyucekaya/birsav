@@ -132,12 +132,28 @@ class Handler(SimpleHTTPRequestHandler):
                 # sınıflandırıcı güvenini ve yol tespiti çakışmasını gate'le.
                 if state_conf >= (0.75 if road else 0.65):
                     container = {"class_name": state.names[int(state.probs.top1)], "confidence": state_conf}
+        annotated = frame.copy()
+        # Birleşik sonuç görselinde bütün sorunları kırmızı kutularla göster.
+        for cls, conf, xyxy in zip(road_result.boxes.cls.tolist(), road_result.boxes.conf.tolist(), road_result.boxes.xyxy.tolist()):
+            x1, y1, x2, y2 = [int(v) for v in xyxy]
+            cv2.rectangle(annotated, (x1, y1), (x2, y2), (0, 0, 255), 3)
+            cv2.putText(annotated, f"road: {road_result.names[int(cls)]} {conf:.0%}", (x1, max(25, y1 - 8)), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 0, 255), 2)
+        for cls, conf, xyxy in zip(litter_result.boxes.cls.tolist(), litter_result.boxes.conf.tolist(), litter_result.boxes.xyxy.tolist()):
+            if litter_result.names[int(cls)] not in LITTER_CLASSES:
+                continue
+            x1, y1, x2, y2 = [int(v) for v in xyxy]
+            cv2.rectangle(annotated, (x1, y1), (x2, y2), (0, 0, 255), 3)
+            cv2.putText(annotated, f"litter: {litter_result.names[int(cls)]} {conf:.0%}", (x1, max(25, y1 - 8)), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 0, 255), 2)
+        ok, encoded = cv2.imencode(".jpg", annotated)
+        if not ok:
+            self._json({"error": "sonuç görseli üretilemedi"}, 500)
+            return
         issues = []
         issues.extend({"type": "road_damage", **item} for item in road)
         issues.extend({"type": "ground_litter", **item} for item in litter)
         if container:
             issues.append({"type": "container", **container})
-        self._json({"issues": issues, "road_damage": road, "ground_litter": litter, "container": container, "litter_model": "YOLO11n COCO baseline"})
+        self._json({"issues": issues, "road_damage": road, "ground_litter": litter, "container": container, "image_base64": base64.b64encode(encoded.tobytes()).decode("ascii"), "litter_model": "YOLO11n COCO baseline"})
 
     def _json(self, payload, status=200):
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
