@@ -127,7 +127,11 @@ class Handler(SimpleHTTPRequestHandler):
                 if _container_state_model is None:
                     _container_state_model = YOLO(str(state_path))
                 state = _container_state_model.predict(frame, verbose=False)[0]
-                container = {"class_name": state.names[int(state.probs.top1)], "confidence": float(state.probs.top1conf)}
+                state_conf = float(state.probs.top1conf)
+                # Tek akışta yol fotoğraflarını konteyner sanmamak için
+                # sınıflandırıcı güvenini ve yol tespiti çakışmasını gate'le.
+                if state_conf >= (0.75 if road else 0.65):
+                    container = {"class_name": state.names[int(state.probs.top1)], "confidence": state_conf}
         issues = []
         issues.extend({"type": "road_damage", **item} for item in road)
         issues.extend({"type": "ground_litter", **item} for item in litter)
