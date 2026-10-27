@@ -145,7 +145,7 @@ class Handler(SimpleHTTPRequestHandler):
         if _face_detector is None:
             yunet_path = ROOT / "models" / "privacy" / "face_detection_yunet_2023mar.onnx"
             if yunet_path.exists() and hasattr(cv2, "FaceDetectorYN"):
-                _face_detector = cv2.FaceDetectorYN.create(str(yunet_path), "", (width, height), 0.70, 0.30, 5000)
+                _face_detector = cv2.FaceDetectorYN.create(str(yunet_path), "", (width, height), 0.58, 0.30, 5000)
         if _face_detector is None and _face_cascade is None:
             _face_cascade = cv2.CascadeClassifier(str(ROOT / "models" / "privacy" / "haarcascade_frontalface_default.xml"))
         if _plate_cascade is None:
@@ -174,15 +174,15 @@ class Handler(SimpleHTTPRequestHandler):
                     _, face_rows = _face_detector.detect(frame)
                     faces = [] if face_rows is None else [
                         (int(row[0]), int(row[1]), int(row[2]), int(row[3]))
-                        for row in face_rows if float(row[14]) >= 0.70 and row[2] >= 20 and row[3] >= 20
+                        for row in face_rows if float(row[14]) >= 0.58 and row[2] >= 20 and row[3] >= 20
                     ]
                 else:
                     faces = _face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=7, minSize=(32, 32)) if _face_cascade is not None and not _face_cascade.empty() else []
                 plates = _plate_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=4, minSize=(30, 12)) if not _plate_cascade.empty() else []
                 privacy_current = [{"kind": "face", "box": [x, y, x + w, y + h]} for x, y, w, h in faces]
                 privacy_current += [{"kind": "plate", "box": [x, y, x + w, y + h]} for x, y, w, h in plates]
-                privacy_tracks = _smooth_boxes(privacy_tracks, privacy_current, match_iou=0.30, alpha=0.35, max_missing=8)
-                stable_privacy = [x for x in privacy_tracks if x["hits"] >= 2 and x["missing"] <= 8]
+                privacy_tracks = _smooth_boxes(privacy_tracks, privacy_current, match_iou=0.25, alpha=0.45, max_missing=10)
+                stable_privacy = [x for x in privacy_tracks if x["hits"] >= 1 and x["missing"] <= 10]
                 if stable_privacy:
                     counts["privacy_frames"] += 1
                     counts["faces_blurred"] += sum(x["kind"] == "face" for x in stable_privacy); counts["plates_blurred"] += sum(x["kind"] == "plate" for x in stable_privacy)
@@ -210,20 +210,31 @@ class Handler(SimpleHTTPRequestHandler):
                             name = scene_result.names[int(c)]
                             if float(p) < {"sidewalk": .08, "billboard": .12, "sign": .15}.get(name, .20): continue
                             scene_current.append({"kind": "scene", "class_name": name, "confidence": float(p), "box": box})
-                    road_tracks = _smooth_boxes(road_tracks, road_current, match_iou=0.30, alpha=0.30)
-                    litter_tracks = _smooth_boxes(litter_tracks, litter_current, match_iou=0.20, alpha=0.30)
-                    scene_tracks = _smooth_boxes(scene_tracks, scene_current, match_iou=0.30, alpha=0.30)
-                    for item in [x for x in road_tracks if x["hits"] >= 2 and x["missing"] == 0]:
+                    road_tracks = _smooth_boxes(road_tracks, road_current, match_iou=0.25, alpha=0.35, max_missing=3)
+                    litter_tracks = _smooth_boxes(litter_tracks, litter_current, match_iou=0.18, alpha=0.35, max_missing=3)
+                    scene_tracks = _smooth_boxes(scene_tracks, scene_current, match_iou=0.25, alpha=0.35, max_missing=3)
+                    for item in [x for x in road_tracks if x["hits"] >= 1 and x["missing"] <= 3]:
                         counts["road_damage"] += 1; frame_events.append({"type": "road_damage", "confidence": round(item["confidence"], 3), "class_name": item["class_name"]})
                         x1, y1, x2, y2 = [int(v) for v in item["box"]]; cv2.rectangle(blurred, (x1, y1), (x2, y2), (0, 0, 255), 3)
-                    for item in [x for x in litter_tracks if x["hits"] >= 2 and x["missing"] == 0]:
+                    for item in [x for x in litter_tracks if x["hits"] >= 1 and x["missing"] <= 3]:
                         counts["ground_litter"] += 1; frame_events.append({"type": "ground_litter", "confidence": round(item["confidence"], 3), "class_name": item["class_name"]})
                         x1, y1, x2, y2 = [int(v) for v in item["box"]]; cv2.rectangle(blurred, (x1, y1), (x2, y2), (0, 0, 255), 3)
-                    for item in [x for x in scene_tracks if x["hits"] >= 2 and x["missing"] == 0]:
+                    for item in [x for x in scene_tracks if x["hits"] >= 1 and x["missing"] <= 3]:
                         counts["scene"] += 1; frame_events.append({"type": item["class_name"], "confidence": round(item["confidence"], 3), "class_name": item["class_name"]})
                         x1, y1, x2, y2 = [int(v) for v in item["box"]]; cv2.rectangle(blurred, (x1, y1), (x2, y2), (180, 0, 180), 2)
                     if frame_events:
                         events.append({"time_sec": round(frame_idx / fps, 2), "items": frame_events})
+                elif frame_idx % sample_every != 0:
+                    # Model çalıştırılmayan ara karelerde son güvenilir kutuları koru.
+                    for item in [x for x in road_tracks if x["hits"] >= 1 and x["missing"] <= 3]:
+                        x1, y1, x2, y2 = [int(v) for v in item["box"]]
+                        cv2.rectangle(blurred, (x1, y1), (x2, y2), (0, 0, 255), 3)
+                    for item in [x for x in litter_tracks if x["hits"] >= 1 and x["missing"] <= 3]:
+                        x1, y1, x2, y2 = [int(v) for v in item["box"]]
+                        cv2.rectangle(blurred, (x1, y1), (x2, y2), (0, 0, 255), 3)
+                    for item in [x for x in scene_tracks if x["hits"] >= 1 and x["missing"] <= 3]:
+                        x1, y1, x2, y2 = [int(v) for v in item["box"]]
+                        cv2.rectangle(blurred, (x1, y1), (x2, y2), (180, 0, 180), 2)
                 writer.write(blurred)
                 frame_idx += 1
         finally:
