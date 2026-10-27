@@ -20,6 +20,9 @@ class Handler(SimpleHTTPRequestHandler):
         super().__init__(*args, directory=str(ROOT / "web"), **kwargs)
 
     def do_POST(self):
+        if self.path == "/api/container-classify":
+            self._container_classify()
+            return
         if self.path != "/api/detect":
             self.send_error(404)
             return
@@ -42,6 +45,24 @@ class Handler(SimpleHTTPRequestHandler):
             self._json({"error": "sonuç görseli üretilemedi"}, 500)
             return
         self._json({"model": "RDD2022 YOLO12s", "detections": detections, "image_base64": base64.b64encode(encoded.tobytes()).decode("ascii")})
+
+    def _container_classify(self):
+        form = cgi.FieldStorage(fp=self.rfile, headers=self.headers, environ={"REQUEST_METHOD": "POST", "CONTENT_TYPE": self.headers.get("Content-Type", "")})
+        if "image" not in form or not getattr(form["image"], "file", None):
+            self._json({"error": "image alanı gerekli"}, 400)
+            return
+        frame = cv2.imdecode(np.frombuffer(form["image"].file.read(), dtype=np.uint8), cv2.IMREAD_COLOR)
+        if frame is None:
+            self._json({"error": "görsel okunamadı"}, 400)
+            return
+        model_path = ROOT / "runs" / "classify" / "runs" / "container" / "train" / "weights" / "best.pt"
+        if not model_path.exists():
+            self._json({"error": "konteyner modeli bulunamadı; önce eğitim çalıştırılmalı"}, 503)
+            return
+        model = YOLO(str(model_path))
+        result = model.predict(frame, verbose=False)[0]
+        top1 = int(result.probs.top1)
+        self._json({"model": "Konteyner YOLO11n sınıflandırıcı", "class_name": result.names[top1], "confidence": float(result.probs.top1conf)})
 
     def _json(self, payload, status=200):
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
