@@ -75,7 +75,25 @@ class Handler(SimpleHTTPRequestHandler):
         # ve daha yüksek çözünürlük kullanıyoruz; gerçek sürümde eşik doğrulama
         # setine göre yeniden ayarlanmalıdır.
         result = model.predict(frame, conf=0.08, imgsz=640, max_det=5, verbose=False)[0]
-        detections = [{"class_name": result.names[int(c)], "confidence": float(p), "xyxy": [round(float(v), 2) for v in box]} for c, p, box in zip(result.boxes.cls.tolist(), result.boxes.conf.tolist(), result.boxes.xyxy.tolist())]
+        raw = sorted(zip(result.boxes.cls.tolist(), result.boxes.conf.tolist(), result.boxes.xyxy.tolist()), key=lambda x: x[1], reverse=True)
+        kept = []
+        for c, p, box in raw:
+            # Küçük eğitim setinde aynı konteyner için farklı sınıflardan
+            # üst üste kutular gelebiliyor; örtüşen düşük skorlu kutuyu ele.
+            x1, y1, x2, y2 = box
+            area = max(1.0, (x2 - x1) * (y2 - y1))
+            duplicate = False
+            for _, _, other in kept:
+                ox1, oy1, ox2, oy2 = other
+                ix1, iy1, ix2, iy2 = max(x1, ox1), max(y1, oy1), min(x2, ox2), min(y2, oy2)
+                inter = max(0.0, ix2 - ix1) * max(0.0, iy2 - iy1)
+                other_area = max(1.0, (ox2 - ox1) * (oy2 - oy1))
+                if inter / min(area, other_area) > 0.6:
+                    duplicate = True
+                    break
+            if not duplicate:
+                kept.append((c, p, box))
+        detections = [{"class_name": result.names[int(c)], "confidence": float(p), "xyxy": [round(float(v), 2) for v in box]} for c, p, box in kept]
         annotated = result.plot()
         ok, encoded = cv2.imencode(".jpg", annotated)
         if not ok:
