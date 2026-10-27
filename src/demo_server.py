@@ -114,7 +114,7 @@ class Handler(SimpleHTTPRequestHandler):
         road_result = _road_model.predict(frame, conf=0.10, verbose=False)[0]
         road = [{"class_name": road_result.names[int(c)], "confidence": float(p)} for c, p in zip(road_result.boxes.cls.tolist(), road_result.boxes.conf.tolist())]
         lane = []
-        lane_path = ROOT / "runs" / "detect" / "runs" / "ceymo_small" / "train_cpu" / "weights" / "best.pt"
+        lane_path = ROOT / "runs" / "detect" / "runs" / "ceymo_small" / "train20_cpu" / "weights" / "best.pt"
         if lane_path.exists():
             if _lane_model is None:
                 _lane_model = YOLO(str(lane_path))
@@ -166,7 +166,7 @@ class Handler(SimpleHTTPRequestHandler):
         issues.extend({"type": "ground_litter", **item} for item in litter)
         if container:
             issues.append({"type": "container", **container})
-        self._json({"issues": issues, "road_damage": road, "lane_markings": lane, "ground_litter": litter, "container": container, "image_base64": base64.b64encode(encoded.tobytes()).decode("ascii"), "litter_model": "TACO YOLO11s hazır model", "lane_model": "CeyMo pilot YOLO11n (3 epoch)" if lane_path.exists() else None})
+        self._json({"issues": issues, "road_damage": road, "lane_markings": lane, "ground_litter": litter, "container": container, "image_base64": base64.b64encode(encoded.tobytes()).decode("ascii"), "litter_model": "TACO YOLO11s hazır model", "lane_model": "CeyMo YOLO11n (20 epoch pilot)" if lane_path.exists() else None})
 
     def _json(self, payload, status=200):
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
