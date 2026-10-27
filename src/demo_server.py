@@ -15,6 +15,7 @@ from ultralytics import YOLO
 ROOT = Path(__file__).resolve().parent.parent
 _road_model = None
 _container_model = None
+_container_state_model = None
 _litter_model = None
 LITTER_CLASSES = {"bottle", "cup", "banana", "apple", "backpack", "handbag", "bowl", "fork", "knife", "spoon", "wine glass", "book", "umbrella", "sports ball"}
 
@@ -66,7 +67,7 @@ class Handler(SimpleHTTPRequestHandler):
         if not model_path.exists():
             self._json({"error": "konteyner modeli bulunamadı; önce eğitim çalıştırılmalı"}, 503)
             return
-        global _container_model
+        global _container_model, _container_state_model
         if _container_model is None:
             _container_model = YOLO(str(model_path))
         model = _container_model
@@ -74,32 +75,30 @@ class Handler(SimpleHTTPRequestHandler):
         # bazı doğru adayları eliyordu. Demo görünürlüğü için daha düşük eşik
         # ve daha yüksek çözünürlük kullanıyoruz; gerçek sürümde eşik doğrulama
         # setine göre yeniden ayarlanmalıdır.
-        result = model.predict(frame, conf=0.08, imgsz=640, max_det=5, verbose=False)[0]
-        raw = sorted(zip(result.boxes.cls.tolist(), result.boxes.conf.tolist(), result.boxes.xyxy.tolist()), key=lambda x: x[1], reverse=True)
-        kept = []
-        for c, p, box in raw:
-            # Küçük eğitim setinde aynı konteyner için farklı sınıflardan
-            # üst üste kutular gelebiliyor; örtüşen düşük skorlu kutuyu ele.
-            x1, y1, x2, y2 = box
-            area = max(1.0, (x2 - x1) * (y2 - y1))
-            duplicate = False
-            for _, _, other in kept:
-                ox1, oy1, ox2, oy2 = other
-                ix1, iy1, ix2, iy2 = max(x1, ox1), max(y1, oy1), min(x2, ox2), min(y2, oy2)
-                inter = max(0.0, ix2 - ix1) * max(0.0, iy2 - iy1)
-                other_area = max(1.0, (ox2 - ox1) * (oy2 - oy1))
-                if inter / min(area, other_area) > 0.6:
-                    duplicate = True
-                    break
-            if not duplicate:
-                kept.append((c, p, box))
-        detections = [{"class_name": result.names[int(c)], "confidence": float(p), "xyxy": [round(float(v), 2) for v in box]} for c, p, box in kept]
-        annotated = result.plot()
+        candidate = model.predict(frame, conf=0.08, imgsz=640, max_det=5, verbose=False)[0]
+        # Detection aşaması konteyner adayı bulur; durum etiketi ayrı
+        # sınıflandırıcıdan gelir. Böylece kaldırım/zemin kutuları doğrudan
+        # empty/full sonucu olarak listelenmez ve API tek sonuç döndürür.
+        state_path = ROOT / "runs" / "classify" / "runs" / "container" / "train" / "weights" / "best.pt"
+        if _container_state_model is None:
+            _container_state_model = YOLO(str(state_path))
+        state = _container_state_model.predict(frame, verbose=False)[0]
+        state_name = state.names[int(state.probs.top1)]
+        state_conf = float(state.probs.top1conf)
+        if len(candidate.boxes):
+            box = candidate.boxes.xyxy[0].tolist()
+        else:
+            box = [0, 0, frame.shape[1], frame.shape[0]]
+        detections = [{"class_name": state_name, "confidence": state_conf, "xyxy": [round(float(v), 2) for v in box]}]
+        annotated = frame.copy()
+        x1, y1, x2, y2 = [int(v) for v in box]
+        cv2.rectangle(annotated, (x1, y1), (x2, y2), (0, 190, 255), 3)
+        cv2.putText(annotated, f"container: {state_name} ({state_conf:.0%})", (max(0, x1), max(30, y1 - 8)), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 190, 255), 2)
         ok, encoded = cv2.imencode(".jpg", annotated)
         if not ok:
             self._json({"error": "sonuç görseli üretilemedi"}, 500)
             return
-        self._json({"model": "Konteyner YOLO11n detection", "detections": detections, "image_base64": base64.b64encode(encoded.tobytes()).decode("ascii")})
+        self._json({"model": "Konteyner detection + durum sınıflandırıcı", "detections": detections, "image_base64": base64.b64encode(encoded.tobytes()).decode("ascii")})
 
     def _analyze(self):
         form = cgi.FieldStorage(fp=self.rfile, headers=self.headers, environ={"REQUEST_METHOD": "POST", "CONTENT_TYPE": self.headers.get("Content-Type", "")})
