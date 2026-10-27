@@ -11,6 +11,7 @@ from ultralytics import YOLO
 
 def run(model_path: Path, source: Path, output_dir: Path, confidence: float) -> int:
     model = YOLO(str(model_path))
+    output_dir = output_dir.resolve()
     results = model.predict(source=str(source), conf=confidence, save=True, project=str(output_dir), name="annotated", exist_ok=True, verbose=False)
     count = 0
     output_dir.mkdir(parents=True, exist_ok=True)
