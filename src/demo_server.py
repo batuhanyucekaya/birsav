@@ -8,9 +8,10 @@ import io
 import json
 import math
 import re
+import threading
 import time
 import uuid
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 import cv2
@@ -35,6 +36,7 @@ VIDEO_DIR.mkdir(parents=True, exist_ok=True)
 MAX_UPLOAD_BYTES = 500 * 1024 * 1024
 VIDEO_TTL_SECONDS = 60 * 60
 _video_tokens = {}
+_video_lock = threading.Lock()
 REFERENCE_LIMITS_PATH = ROOT / "data" / "reference_limits.json"
 
 
@@ -158,7 +160,10 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         if self.path == "/api/analyze-video":
-            self._analyze_video()
+            # Model nesneleri ve tracker durumu korunur; GET/statik sayfa istekleri
+            # video analizi sürerken beklemez.
+            with _video_lock:
+                self._analyze_video()
             return
         if self.path == "/api/analyze":
             self._analyze()
@@ -598,10 +603,7 @@ class Handler(SimpleHTTPRequestHandler):
 
 
 def main() -> None:
-    # Global OpenCV/YOLO model nesneleri thread-safe değildir. Demo sürümünde
-    # istekleri sıraya alarak modellerin çözünürlük ve tracker durumlarının
-    # farklı videolar arasında karışmasını engelleriz.
-    server = HTTPServer(("127.0.0.1", 8000), Handler)
+    server = ThreadingHTTPServer(("127.0.0.1", 8000), Handler)
     print("Demo sitesi: http://127.0.0.1:8000")
     print("Veriler yalnızca tarayıcıda örnek olarak tutulur; kapatınca kalıcı kayıt kalmaz.")
     try:
