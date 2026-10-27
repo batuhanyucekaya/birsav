@@ -122,9 +122,9 @@ class Handler(SimpleHTTPRequestHandler):
             lane_result = _lane_model.predict(frame, conf=0.20, imgsz=320, verbose=False)[0]
             lane = [{"class_name": lane_result.names[int(c)], "confidence": float(p), "xyxy": [round(float(v), 2) for v in box]} for c, p, box in zip(lane_result.boxes.cls.tolist(), lane_result.boxes.conf.tolist(), lane_result.boxes.xyxy.tolist())]
         scene = []
-        scene_path = ROOT / "runs" / "segment" / "runs" / "segment" / "runs" / "mapillary_seg" / "train_signs_cpu" / "weights" / "best.pt"
+        scene_path = ROOT / "runs" / "segment" / "runs" / "segment" / "runs" / "mapillary_seg" / "train_archive_cpu" / "weights" / "best.pt"
         if not scene_path.exists():
-            scene_path = ROOT / "runs" / "segment" / "runs" / "mapillary_seg" / "train_signs_cpu" / "weights" / "best.pt"
+            scene_path = ROOT / "runs" / "segment" / "runs" / "mapillary_seg" / "train_archive_cpu" / "weights" / "best.pt"
         if scene_path.exists():
             if _scene_model is None:
                 _scene_model = YOLO(str(scene_path))
