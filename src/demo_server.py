@@ -22,6 +22,7 @@ _lane_model = None
 _scene_model = None
 _litter_model = None
 _face_cascade = None
+_face_detector = None
 _plate_cascade = None
 LITTER_CLASSES = {"Plastic bag & wrapper", "Cigarette", "Bottle", "Bottle cap", "Can", "Other plastic", "Carton", "Cup", "Other"}
 VIDEO_DIR = ROOT / "tmp" / "video_results"
@@ -140,8 +141,12 @@ class Handler(SimpleHTTPRequestHandler):
             cap.release(); raw_path.unlink(missing_ok=True)
             self._json({"error": "tarayıcı uyumlu video kodlayıcı açılamadı"}, 500)
             return
-        global _face_cascade, _plate_cascade, _road_model, _litter_model, _scene_model
-        if _face_cascade is None:
+        global _face_cascade, _face_detector, _plate_cascade, _road_model, _litter_model, _scene_model
+        if _face_detector is None:
+            yunet_path = ROOT / "models" / "privacy" / "face_detection_yunet_2023mar.onnx"
+            if yunet_path.exists() and hasattr(cv2, "FaceDetectorYN"):
+                _face_detector = cv2.FaceDetectorYN.create(str(yunet_path), "", (width, height), 0.70, 0.30, 5000)
+        if _face_detector is None and _face_cascade is None:
             _face_cascade = cv2.CascadeClassifier(str(ROOT / "models" / "privacy" / "haarcascade_frontalface_default.xml"))
         if _plate_cascade is None:
             _plate_cascade = cv2.CascadeClassifier(str(ROOT / "models" / "privacy" / "haarcascade_russian_plate_number.xml"))
@@ -164,21 +169,31 @@ class Handler(SimpleHTTPRequestHandler):
                     break
                 blurred = frame.copy()
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                faces = _face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(24, 24)) if not _face_cascade.empty() else []
+                if _face_detector is not None:
+                    _face_detector.setInputSize((width, height))
+                    _, face_rows = _face_detector.detect(frame)
+                    faces = [] if face_rows is None else [
+                        (int(row[0]), int(row[1]), int(row[2]), int(row[3]))
+                        for row in face_rows if float(row[14]) >= 0.70 and row[2] >= 20 and row[3] >= 20
+                    ]
+                else:
+                    faces = _face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=7, minSize=(32, 32)) if _face_cascade is not None and not _face_cascade.empty() else []
                 plates = _plate_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=4, minSize=(30, 12)) if not _plate_cascade.empty() else []
                 privacy_current = [{"kind": "face", "box": [x, y, x + w, y + h]} for x, y, w, h in faces]
                 privacy_current += [{"kind": "plate", "box": [x, y, x + w, y + h]} for x, y, w, h in plates]
-                privacy_tracks = _smooth_boxes(privacy_tracks, privacy_current, match_iou=0.20, alpha=0.25)
-                stable_privacy = [x for x in privacy_tracks if x["hits"] >= 2 and x["missing"] == 0]
+                privacy_tracks = _smooth_boxes(privacy_tracks, privacy_current, match_iou=0.30, alpha=0.35, max_missing=8)
+                stable_privacy = [x for x in privacy_tracks if x["hits"] >= 2 and x["missing"] <= 8]
                 if stable_privacy:
                     counts["privacy_frames"] += 1
                     counts["faces_blurred"] += sum(x["kind"] == "face" for x in stable_privacy); counts["plates_blurred"] += sum(x["kind"] == "plate" for x in stable_privacy)
                     for item in stable_privacy:
-                        x1, y1, x2, y2 = [max(0, int(v)) for v in item["box"]]
+                        bx1, by1, bx2, by2 = item["box"]
+                        pad_x, pad_y = (bx2 - bx1) * 0.18, (by2 - by1) * 0.18
+                        x1, y1, x2, y2 = [max(0, int(v)) for v in (bx1 - pad_x, by1 - pad_y, bx2 + pad_x, by2 + pad_y)]
                         x2, y2 = min(width, x2), min(height, y2)
                         roi = blurred[y1:y2, x1:x2]
                         if roi.size:
-                            blurred[y1:y2, x1:x2] = cv2.GaussianBlur(roi, (0, 0), 21)
+                            blurred[y1:y2, x1:x2] = cv2.GaussianBlur(roi, (0, 0), 35)
                 if frame_idx % sample_every == 0:
                     road_result = _road_model.predict(blurred, conf=0.25, verbose=False)[0]
                     litter_result = _litter_model.predict(blurred, conf=0.35, verbose=False)[0]
