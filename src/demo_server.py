@@ -4,6 +4,8 @@ import base64
 import cgi
 import io
 import json
+import time
+import uuid
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -19,7 +21,10 @@ _container_state_model = None
 _lane_model = None
 _scene_model = None
 _litter_model = None
+_privacy_model = None
 LITTER_CLASSES = {"Plastic bag & wrapper", "Cigarette", "Bottle", "Bottle cap", "Can", "Other plastic", "Carton", "Cup", "Other"}
+VIDEO_DIR = ROOT / "tmp" / "video_results"
+VIDEO_DIR.mkdir(parents=True, exist_ok=True)
 
 
 class Handler(SimpleHTTPRequestHandler):
@@ -27,6 +32,9 @@ class Handler(SimpleHTTPRequestHandler):
         super().__init__(*args, directory=str(ROOT / "web"), **kwargs)
 
     def do_POST(self):
+        if self.path == "/api/analyze-video":
+            self._analyze_video()
+            return
         if self.path == "/api/analyze":
             self._analyze()
             return
@@ -55,6 +63,98 @@ class Handler(SimpleHTTPRequestHandler):
             self._json({"error": "sonuç görseli üretilemedi"}, 500)
             return
         self._json({"model": "RDD2022 YOLO12s", "detections": detections, "image_base64": base64.b64encode(encoded.tobytes()).decode("ascii")})
+
+    def do_GET(self):
+        if self.path.startswith("/video-results/"):
+            name = Path(self.path.split("?", 1)[0]).name
+            target = VIDEO_DIR / name
+            if target.exists() and target.suffix == ".mp4":
+                data = target.read_bytes()
+                self.send_response(200)
+                self.send_header("Content-Type", "video/mp4")
+                self.send_header("Content-Length", str(len(data)))
+                self.end_headers()
+                self.wfile.write(data)
+                return
+            self.send_error(404)
+            return
+        super().do_GET()
+
+    def _analyze_video(self):
+        form = cgi.FieldStorage(fp=self.rfile, headers=self.headers, environ={"REQUEST_METHOD": "POST", "CONTENT_TYPE": self.headers.get("Content-Type", "")})
+        if "video" not in form or not getattr(form["video"], "file", None):
+            self._json({"error": "video alanı gerekli"}, 400)
+            return
+        token = uuid.uuid4().hex
+        raw_path = VIDEO_DIR / f"{token}.input"
+        output_path = VIDEO_DIR / f"{token}.mp4"
+        raw_path.write_bytes(form["video"].file.read())
+        cap = cv2.VideoCapture(str(raw_path))
+        if not cap.isOpened():
+            raw_path.unlink(missing_ok=True)
+            self._json({"error": "video okunamadı"}, 400)
+            return
+        fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
+        width, height = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        if not width or not height:
+            cap.release(); raw_path.unlink(missing_ok=True)
+            self._json({"error": "video boyutu okunamadı"}, 400)
+            return
+        sample_every = max(1, int(round(fps / 3)))
+        writer = cv2.VideoWriter(str(output_path), cv2.VideoWriter_fourcc(*"mp4v"), fps, (width, height))
+        global _privacy_model, _road_model, _litter_model, _scene_model
+        if _privacy_model is None:
+            _privacy_model = YOLO(str(ROOT / "yolo11n.pt"))
+        if _road_model is None:
+            _road_model = YOLO(str(ROOT / "models" / "yolo12s_seed0_best.pt"))
+        if _litter_model is None:
+            _litter_model = YOLO(str(ROOT / "models" / "taco_yolo11s_best.pt"))
+        scene_path = ROOT / "runs" / "segment" / "runs" / "segment" / "runs" / "mapillary_seg" / "train_advertisement_fix" / "weights" / "best.pt"
+        if scene_path.exists() and _scene_model is None:
+            _scene_model = YOLO(str(scene_path))
+        counts = {"privacy_frames": 0, "road_damage": 0, "ground_litter": 0, "scene": 0}
+        events = []
+        frame_idx = 0
+        try:
+            while True:
+                ok, frame = cap.read()
+                if not ok:
+                    break
+                # Her karede kişi/araç bölgelerini bulanıklaştır; ham kare kaydedilmez.
+                privacy = _privacy_model.predict(frame, conf=0.35, classes=[0, 2, 5, 7], imgsz=320, verbose=False)[0]
+                blurred = frame.copy()
+                if len(privacy.boxes):
+                    counts["privacy_frames"] += 1
+                    for box in privacy.boxes.xyxy.tolist():
+                        x1, y1, x2, y2 = [max(0, int(v)) for v in box]
+                        roi = blurred[y1:min(height, y2), x1:min(width, x2)]
+                        if roi.size:
+                            blurred[y1:min(height, y2), x1:min(width, x2)] = cv2.GaussianBlur(roi, (0, 0), 21)
+                if frame_idx % sample_every == 0:
+                    road_result = _road_model.predict(blurred, conf=0.25, verbose=False)[0]
+                    litter_result = _litter_model.predict(blurred, conf=0.35, verbose=False)[0]
+                    scene_result = _scene_model.predict(blurred, conf=0.12, imgsz=640, verbose=False)[0] if _scene_model else None
+                    frame_events = []
+                    for c, p, box in zip(road_result.boxes.cls.tolist(), road_result.boxes.conf.tolist(), road_result.boxes.xyxy.tolist()):
+                        counts["road_damage"] += 1; frame_events.append({"type": "road_damage", "confidence": round(float(p), 3), "class_name": road_result.names[int(c)]})
+                        x1, y1, x2, y2 = [int(v) for v in box]; cv2.rectangle(blurred, (x1, y1), (x2, y2), (0, 0, 255), 3)
+                    for c, p, box in zip(litter_result.boxes.cls.tolist(), litter_result.boxes.conf.tolist(), litter_result.boxes.xyxy.tolist()):
+                        if litter_result.names[int(c)] not in LITTER_CLASSES: continue
+                        counts["ground_litter"] += 1; frame_events.append({"type": "ground_litter", "confidence": round(float(p), 3), "class_name": litter_result.names[int(c)]})
+                        x1, y1, x2, y2 = [int(v) for v in box]; cv2.rectangle(blurred, (x1, y1), (x2, y2), (0, 0, 255), 3)
+                    if scene_result:
+                        for c, p, box in zip(scene_result.boxes.cls.tolist(), scene_result.boxes.conf.tolist(), scene_result.boxes.xyxy.tolist()):
+                            name = scene_result.names[int(c)]
+                            if float(p) < {"sidewalk": .08, "billboard": .12, "sign": .15}.get(name, .20): continue
+                            counts["scene"] += 1; frame_events.append({"type": name, "confidence": round(float(p), 3), "class_name": name})
+                            x1, y1, x2, y2 = [int(v) for v in box]; cv2.rectangle(blurred, (x1, y1), (x2, y2), (180, 0, 180), 2)
+                    if frame_events:
+                        events.append({"time_sec": round(frame_idx / fps, 2), "items": frame_events})
+                writer.write(blurred)
+                frame_idx += 1
+        finally:
+            cap.release(); writer.release(); raw_path.unlink(missing_ok=True)
+        self._json({"video_url": f"/video-results/{output_path.name}", "frames": frame_idx, "fps": round(fps, 2), "sample_every": sample_every, "counts": counts, "events": events[:200], "privacy_note": "Kişi/araç bölgeleri bulanıklaştırıldı; ham video saklanmadı."})
 
     def _container_classify(self):
         form = cgi.FieldStorage(fp=self.rfile, headers=self.headers, environ={"REQUEST_METHOD": "POST", "CONTENT_TYPE": self.headers.get("Content-Type", "")})
