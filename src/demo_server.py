@@ -214,6 +214,7 @@ class Handler(SimpleHTTPRequestHandler):
         face_ids, plate_ids = set(), set()
         road_tracks, litter_tracks, scene_tracks = [], [], []
         frame_idx = 0
+        processing_error = None
         try:
             while True:
                 ok, frame = cap.read()
@@ -329,8 +330,14 @@ class Handler(SimpleHTTPRequestHandler):
                         cv2.rectangle(blurred, (x1, y1), (x2, y2), (180, 0, 180), 2)
                 writer.write(blurred)
                 frame_idx += 1
+        except Exception:
+            processing_error = "video işleme sırasında beklenmeyen bir hata oluştu"
         finally:
             cap.release(); writer.release(); raw_path.unlink(missing_ok=True)
+        if processing_error:
+            output_path.unlink(missing_ok=True)
+            self._json({"error": processing_error}, 500)
+            return
         self._json({"video_url": f"/video-results/{output_path.name}", "frames": frame_idx, "fps": round(fps, 2), "sample_every": sample_every, "counts": counts, "events": events[:200], "privacy_note": "Yalnızca tespit edilen yüz ve plaka bölgeleri bulanıklaştırıldı; ham video saklanmadı."})
 
     def _container_classify(self):
