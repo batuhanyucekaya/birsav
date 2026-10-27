@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parent.parent
 _road_model = None
 _container_model = None
 _container_state_model = None
+_lane_model = None
 _litter_model = None
 LITTER_CLASSES = {"Plastic bag & wrapper", "Cigarette", "Bottle", "Bottle cap", "Can", "Other plastic", "Carton", "Cup", "Other"}
 
@@ -107,11 +108,18 @@ class Handler(SimpleHTTPRequestHandler):
         if frame is None:
             self._json({"error": "görsel okunamadı"}, 400)
             return
-        global _road_model, _litter_model, _container_model, _container_state_model
+        global _road_model, _litter_model, _container_model, _container_state_model, _lane_model
         if _road_model is None:
             _road_model = YOLO(str(ROOT / "models" / "yolo12s_seed0_best.pt"))
         road_result = _road_model.predict(frame, conf=0.10, verbose=False)[0]
         road = [{"class_name": road_result.names[int(c)], "confidence": float(p)} for c, p in zip(road_result.boxes.cls.tolist(), road_result.boxes.conf.tolist())]
+        lane = []
+        lane_path = ROOT / "runs" / "detect" / "runs" / "ceymo_small" / "train_cpu" / "weights" / "best.pt"
+        if lane_path.exists():
+            if _lane_model is None:
+                _lane_model = YOLO(str(lane_path))
+            lane_result = _lane_model.predict(frame, conf=0.20, imgsz=320, verbose=False)[0]
+            lane = [{"class_name": lane_result.names[int(c)], "confidence": float(p), "xyxy": [round(float(v), 2) for v in box]} for c, p, box in zip(lane_result.boxes.cls.tolist(), lane_result.boxes.conf.tolist(), lane_result.boxes.xyxy.tolist())]
         if _litter_model is None:
             _litter_model = YOLO(str(ROOT / "models" / "taco_yolo11s_best.pt"))
         litter_result = _litter_model.predict(frame, conf=0.25, verbose=False)[0]
@@ -138,6 +146,10 @@ class Handler(SimpleHTTPRequestHandler):
             x1, y1, x2, y2 = [int(v) for v in xyxy]
             cv2.rectangle(annotated, (x1, y1), (x2, y2), (0, 0, 255), 3)
             cv2.putText(annotated, f"road: {road_result.names[int(cls)]} {conf:.0%}", (x1, max(25, y1 - 8)), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 0, 255), 2)
+        for item in lane:
+            x1, y1, x2, y2 = [int(v) for v in item["xyxy"]]
+            cv2.rectangle(annotated, (x1, y1), (x2, y2), (0, 180, 0), 3)
+            cv2.putText(annotated, f"lane: {item['class_name']} {item['confidence']:.0%}", (x1, max(25, y1 - 8)), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 180, 0), 2)
         for cls, conf, xyxy in zip(litter_result.boxes.cls.tolist(), litter_result.boxes.conf.tolist(), litter_result.boxes.xyxy.tolist()):
             if litter_result.names[int(cls)] not in LITTER_CLASSES:
                 continue
@@ -150,10 +162,11 @@ class Handler(SimpleHTTPRequestHandler):
             return
         issues = []
         issues.extend({"type": "road_damage", **item} for item in road)
+        issues.extend({"type": "lane_marking", **item} for item in lane)
         issues.extend({"type": "ground_litter", **item} for item in litter)
         if container:
             issues.append({"type": "container", **container})
-        self._json({"issues": issues, "road_damage": road, "ground_litter": litter, "container": container, "image_base64": base64.b64encode(encoded.tobytes()).decode("ascii"), "litter_model": "TACO YOLO11s hazır model"})
+        self._json({"issues": issues, "road_damage": road, "lane_markings": lane, "ground_litter": litter, "container": container, "image_base64": base64.b64encode(encoded.tobytes()).decode("ascii"), "litter_model": "TACO YOLO11s hazır model", "lane_model": "CeyMo pilot YOLO11n (3 epoch)" if lane_path.exists() else None})
 
     def _json(self, payload, status=200):
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
