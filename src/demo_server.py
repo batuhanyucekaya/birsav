@@ -7,7 +7,7 @@ import json
 import re
 import time
 import uuid
-from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 
 import cv2
@@ -31,6 +31,7 @@ VIDEO_DIR = ROOT / "tmp" / "video_results"
 VIDEO_DIR.mkdir(parents=True, exist_ok=True)
 MAX_UPLOAD_BYTES = 500 * 1024 * 1024
 VIDEO_TTL_SECONDS = 60 * 60
+_video_tokens = {}
 
 
 def _cleanup_video_dir() -> None:
@@ -41,6 +42,9 @@ def _cleanup_video_dir() -> None:
                 path.unlink(missing_ok=True)
         except OSError:
             continue
+    for token, created in list(_video_tokens.items()):
+        if created < cutoff:
+            _video_tokens.pop(token, None)
 
 
 def _iou(a, b):
@@ -129,6 +133,10 @@ class Handler(SimpleHTTPRequestHandler):
             _cleanup_video_dir()
             name = Path(self.path.split("?", 1)[0]).name
             if not re.fullmatch(r"[0-9a-f]{32}\.(?:webm|mp4)", name):
+                self.send_error(404)
+                return
+            token = name.rsplit(".", 1)[0]
+            if token not in _video_tokens:
                 self.send_error(404)
                 return
             target = VIDEO_DIR / name
@@ -338,6 +346,7 @@ class Handler(SimpleHTTPRequestHandler):
             output_path.unlink(missing_ok=True)
             self._json({"error": processing_error}, 500)
             return
+        _video_tokens[token] = time.time()
         self._json({"video_url": f"/video-results/{output_path.name}", "frames": frame_idx, "fps": round(fps, 2), "sample_every": sample_every, "counts": counts, "events": events[:200], "privacy_note": "Yalnızca tespit edilen yüz ve plaka bölgeleri bulanıklaştırıldı; ham video saklanmadı."})
 
     def _container_classify(self):
@@ -501,7 +510,10 @@ class Handler(SimpleHTTPRequestHandler):
 
 
 def main() -> None:
-    server = ThreadingHTTPServer(("127.0.0.1", 8000), Handler)
+    # Global OpenCV/YOLO model nesneleri thread-safe değildir. Demo sürümünde
+    # istekleri sıraya alarak modellerin çözünürlük ve tracker durumlarının
+    # farklı videolar arasında karışmasını engelleriz.
+    server = HTTPServer(("127.0.0.1", 8000), Handler)
     print("Demo sitesi: http://127.0.0.1:8000")
     print("Veriler yalnızca tarayıcıda örnek olarak tutulur; kapatınca kalıcı kayıt kalmaz.")
     try:

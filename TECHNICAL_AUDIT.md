@@ -9,10 +9,10 @@
 | ID | Önem | Konum | Problem | Kanıt | Kök neden | Çözüm | Test | Durum |
 |---|---|---|---|---|---|---|---|---|
 | AUD-001 | P1 | `demo_server.py:161` | Yükleme boyutu sınırsızdı | İstek gövdesi doğrudan okunuyordu | Akış ve limit kontrolü yoktu | 500 MB akış limiti, 1 MB parçalı yazım | Küçük MP4: HTTP 200; limit yolu kod incelemesi | Düzeltildi |
-| AUD-002 | P1 | `demo_server.py:37,127` | Geçici/çıktı dosyaları süresiz kalabiliyordu | `video-results` klasöründe eski çıktılar görüldü | TTL temizliği yoktu | 1 saat TTL temizliği ve token biçimi doğrulaması | Geçersiz URL HTTP 404 | Kısmen düzeltildi |
+| AUD-002 | P1 | `demo_server.py:37,127` | Geçici/çıktı dosyaları süresiz kalabiliyordu | `video-results` klasöründe eski çıktılar görüldü | TTL temizliği yoktu | 1 saat TTL temizliği, süreç içi token kaydı ve token biçimi doğrulaması | Yeni URL HTTP 200; eski URL HTTP 404 | Düzeltildi (süreç içi erişim) |
 | AUD-003 | P1 | `demo_server.py:334` | İşlem hatasında kısmi WebM başarı gibi kalabilirdi | Döngüde yalnızca `finally` vardı | Hata sonrası response/çıktı politikası yoktu | Hata yakalama, kısmi çıktı silme, HTTP 500 | Syntax + normal video regresyonu | Düzeltildi |
 | AUD-004 | P1 | `demo_server.py:200,244` | Plaka modeli ülke/çekim koşullarına göre doğrulanmamış | Rus plaka Haar Cascade kullanılıyor | Etiketli Türkiye plaka benchmarkı yok | Model değiştirilmedi; ölçüm ihtiyacı raporlandı | Gerçek plaka test seti yok | Açık |
-| AUD-005 | P1 | `demo_server.py:504` | Eşzamanlı isteklerde global model/tracker durumu riskli | `ThreadingHTTPServer` + global modeller | İstek başına izolasyon/worker kilidi yok | Ayrı bir concurrency testi gerekli | Henüz yapılmadı | Açık |
+| AUD-005 | P1 | `demo_server.py:504` | Eşzamanlı isteklerde global model/tracker durumu riskliydi | `ThreadingHTTPServer` + global modeller | İstek başına izolasyon/worker kilidi yoktu | Demo sunucusu `HTTPServer` ile seri kuyruğa alındı | Yeni URL HTTP 200; eski URL HTTP 404 | Düzeltildi (throughput düşer) |
 | AUD-006 | P1 | `demo_server.py:181` | FPS yalnızca metadata’dan okunuyor | `CAP_PROP_FPS or 25.0` kullanımı | PTS/VFR doğrulaması yok | FFprobe/PyAV doğrulaması sonraki faza bırakıldı | VFR/bozuk metadata testi yok | Açık |
 | AUD-007 | P2 | `demo_server.py:259-334` | Takip sayısı benzersiz track tahminidir, gerçek kişi sayısı değildir | ID kaybında yeni ID oluşabilir | Re-identification yok | API dokümantasyonunda “tahmini” olarak belirtilmeli | Sentetik IoU birim testi yapıldı | Kısmen düzeltildi |
 | AUD-008 | P2 | `demo_server.py:504` | Uzun video HTTP isteği boyunca bloklanıyor | Analiz aynı handler içinde yapılıyor | Job/worker kuyruğu yok | Demo kapsamı dışında; üretim için async job önerildi | Kısa video çalışıyor | Açık |
@@ -29,10 +29,9 @@
 
 ## P0/P1 açık riskler
 
-1. Video sonuç URL’si tokena sahip olan herkes için erişilebilir; kullanıcı kimlik doğrulaması yoktur. UUID tahmin riskini azaltır fakat yetkilendirme değildir.
-2. `ThreadingHTTPServer` global YuNet/YOLO nesnelerini eşzamanlı kullanıyor; farklı çözünürlüklerde yarış durumu oluşabilir.
-3. Plaka Cascade için Türkiye plakaları üzerinde precision/recall ölçümü yoktur. Gizlilik sistemi üretim güvenliği olarak kabul edilmemelidir.
-4. VFR, PTS, döndürülmüş telefon videosu, bozuk codec ve uzun/eşzamanlı video testleri tamamlanmadı.
+1. Video sonuçları süreç içi token kaydıyla korunuyor; gerçek kullanıcı kimlik doğrulaması yoktur. Üretim için oturum/yetkilendirme gerekir.
+2. Plaka Cascade için Türkiye plakaları üzerinde precision/recall ölçümü yoktur. Gizlilik sistemi üretim güvenliği olarak kabul edilmemelidir.
+3. VFR, PTS, döndürülmüş telefon videosu, bozuk codec ve uzun video testleri tamamlanmadı.
 
 ## Skor kartı
 
