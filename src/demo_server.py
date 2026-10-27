@@ -346,6 +346,13 @@ class Handler(SimpleHTTPRequestHandler):
             output_path.unlink(missing_ok=True)
             self._json({"error": processing_error}, 500)
             return
+        validation = cv2.VideoCapture(str(output_path))
+        output_ok, _ = validation.read()
+        validation.release()
+        if not output_ok:
+            output_path.unlink(missing_ok=True)
+            self._json({"error": "işlenen video çıktısı doğrulanamadı"}, 500)
+            return
         _video_tokens[token] = time.time()
         self._json({"video_url": f"/video-results/{output_path.name}", "frames": frame_idx, "fps": round(fps, 2), "sample_every": sample_every, "counts": counts, "events": events[:200], "privacy_note": "Yalnızca tespit edilen yüz ve plaka bölgeleri bulanıklaştırıldı; ham video saklanmadı."})
 
