@@ -201,9 +201,20 @@ class Handler(SimpleHTTPRequestHandler):
                         ]
                 else:
                     faces = _face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=7, minSize=(32, 32)) if _face_cascade is not None and not _face_cascade.empty() else []
-                plates = _plate_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=4, minSize=(30, 12)) if not _plate_cascade.empty() else []
-                privacy_current = [{"kind": "face", "box": [x, y, x + w, y + h]} for x, y, w, h in faces]
-                privacy_current += [{"kind": "plate", "box": [x, y, x + w, y + h]} for x, y, w, h in plates]
+                plates = _plate_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 12)) if not _plate_cascade.empty() else []
+                frame_area = float(width * height)
+                valid_faces = []
+                for x, y, w, h in faces:
+                    ratio = w / max(1, h)
+                    if 0.35 <= ratio <= 2.4 and (w * h) / frame_area <= 0.28:
+                        valid_faces.append((x, y, w, h))
+                valid_plates = []
+                for x, y, w, h in plates:
+                    ratio = w / max(1, h)
+                    if 1.2 <= ratio <= 8.0 and (w * h) / frame_area <= 0.12:
+                        valid_plates.append((x, y, w, h))
+                privacy_current = [{"kind": "face", "box": [x, y, x + w, y + h]} for x, y, w, h in valid_faces]
+                privacy_current += [{"kind": "plate", "box": [x, y, x + w, y + h]} for x, y, w, h in valid_plates]
                 privacy_tracks = _smooth_boxes(privacy_tracks, privacy_current, match_iou=0.25, alpha=0.45, max_missing=10)
                 stable_privacy = [x for x in privacy_tracks if x["hits"] >= 1 and x["missing"] <= 10]
                 if stable_privacy:
@@ -213,7 +224,8 @@ class Handler(SimpleHTTPRequestHandler):
                     counts["faces_blurred"] = len(face_ids); counts["plates_blurred"] = len(plate_ids)
                     for item in stable_privacy:
                         bx1, by1, bx2, by2 = item["box"]
-                        pad_x, pad_y = (bx2 - bx1) * 0.18, (by2 - by1) * 0.18
+                        pad_x = min((bx2 - bx1) * 0.18, width * 0.08)
+                        pad_y = min((by2 - by1) * 0.18, height * 0.08)
                         x1, y1, x2, y2 = [max(0, int(v)) for v in (bx1 - pad_x, by1 - pad_y, bx2 + pad_x, by2 + pad_y)]
                         x2, y2 = min(width, x2), min(height, y2)
                         roi = blurred[y1:y2, x1:x2]
