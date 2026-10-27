@@ -18,5 +18,7 @@ data/demo/
 .env
 tmp/
 models/*.pt
+*.pt
 runs/
+data/container_dataset/
 
