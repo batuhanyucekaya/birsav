@@ -20,6 +20,7 @@ _container_model = None
 _container_state_model = None
 _lane_model = None
 _scene_model = None
+_object_model = None
 _litter_model = None
 _face_cascade = None
 _face_detector = None
@@ -153,7 +154,7 @@ class Handler(SimpleHTTPRequestHandler):
             cap.release(); raw_path.unlink(missing_ok=True)
             self._json({"error": "tarayıcı uyumlu video kodlayıcı açılamadı"}, 500)
             return
-        global _face_cascade, _face_detector, _plate_cascade, _road_model, _litter_model, _scene_model
+        global _face_cascade, _face_detector, _plate_cascade, _road_model, _litter_model, _scene_model, _object_model
         if _face_detector is None:
             yunet_path = ROOT / "models" / "privacy" / "face_detection_yunet_2023mar.onnx"
             if yunet_path.exists() and hasattr(cv2, "FaceDetectorYN"):
@@ -169,6 +170,8 @@ class Handler(SimpleHTTPRequestHandler):
         scene_path = ROOT / "runs" / "segment" / "runs" / "segment" / "runs" / "mapillary_seg" / "train_advertisement_fix" / "weights" / "best.pt"
         if scene_path.exists() and _scene_model is None:
             _scene_model = YOLO(str(scene_path))
+        if _object_model is None and (ROOT / "yolo11n.pt").exists():
+            _object_model = YOLO(str(ROOT / "yolo11n.pt"))
         counts = {"privacy_frames": 0, "faces_blurred": 0, "plates_blurred": 0, "road_damage": 0, "ground_litter": 0, "scene": 0}
         events = []
         privacy_tracks = []
@@ -246,6 +249,10 @@ class Handler(SimpleHTTPRequestHandler):
                     road_result = _road_model.predict(blurred, conf=0.25, verbose=False)[0]
                     litter_result = _litter_model.predict(blurred, conf=0.35, verbose=False)[0]
                     scene_result = _scene_model.predict(blurred, conf=0.12, imgsz=640, verbose=False)[0] if _scene_model else None
+                    person_boxes = []
+                    if _object_model:
+                        person_result = _object_model.predict(blurred, conf=0.35, classes=[0], imgsz=640, verbose=False)[0]
+                        person_boxes = [box for box in person_result.boxes.xyxy.tolist()]
                     frame_events = []
                     road_current, litter_current, scene_current = [], [], []
                     for c, p, box in zip(road_result.boxes.cls.tolist(), road_result.boxes.conf.tolist(), road_result.boxes.xyxy.tolist()):
@@ -257,6 +264,7 @@ class Handler(SimpleHTTPRequestHandler):
                         for c, p, box in zip(scene_result.boxes.cls.tolist(), scene_result.boxes.conf.tolist(), scene_result.boxes.xyxy.tolist()):
                             name = scene_result.names[int(c)]
                             if float(p) < {"sidewalk": .08, "billboard": .12, "sign": .15, "trash_can": .30}.get(name, .20): continue
+                            if name == "trash_can" and any(_iou(box, person_box) > 0.05 for person_box in person_boxes): continue
                             scene_current.append({"kind": "scene", "class_name": name, "confidence": float(p), "box": box})
                     road_tracks = _smooth_boxes(road_tracks, road_current, match_iou=0.25, alpha=0.35, max_missing=3)
                     litter_tracks = _smooth_boxes(litter_tracks, litter_current, match_iou=0.18, alpha=0.35, max_missing=3)
@@ -342,7 +350,7 @@ class Handler(SimpleHTTPRequestHandler):
         if frame is None:
             self._json({"error": "görsel okunamadı"}, 400)
             return
-        global _road_model, _litter_model, _container_model, _container_state_model, _lane_model, _scene_model
+        global _road_model, _litter_model, _container_model, _container_state_model, _lane_model, _scene_model, _object_model
         if _road_model is None:
             _road_model = YOLO(str(ROOT / "models" / "yolo12s_seed0_best.pt"))
         road_result = _road_model.predict(frame, conf=0.10, verbose=False)[0]
@@ -363,11 +371,19 @@ class Handler(SimpleHTTPRequestHandler):
                 _scene_model = YOLO(str(scene_path))
             # Küçük pano/kaldırım nesneleri için temel eşiği düşük tutup sınıfa göre filtreliyoruz.
             scene_result = _scene_model.predict(frame, conf=0.08, imgsz=640, verbose=False)[0]
+            if _object_model is None and (ROOT / "yolo11n.pt").exists():
+                _object_model = YOLO(str(ROOT / "yolo11n.pt"))
+            person_boxes = []
+            if _object_model is not None:
+                person_result = _object_model.predict(frame, conf=0.35, classes=[0], imgsz=640, verbose=False)[0]
+                person_boxes = person_result.boxes.xyxy.tolist()
             thresholds = {"road": 0.20, "sidewalk": 0.08, "lane_marking": 0.15, "trash_can": 0.30, "billboard": 0.12, "sign": 0.15}
             scene = []
             for c, p, box in zip(scene_result.boxes.cls.tolist(), scene_result.boxes.conf.tolist(), scene_result.boxes.xyxy.tolist()):
                 name, confidence = scene_result.names[int(c)], float(p)
                 if confidence < thresholds.get(name, 0.12):
+                    continue
+                if name == "trash_can" and any(_iou(box, person_box) > 0.05 for person_box in person_boxes):
                     continue
                 scene.append({"class_name": name, "confidence": confidence, "xyxy": [round(float(v), 2) for v in box]})
         if _litter_model is None:
@@ -388,6 +404,10 @@ class Handler(SimpleHTTPRequestHandler):
                 candidate_area = (bw * bh) / max(1.0, frame.shape[0] * frame.shape[1])
                 candidate_ratio = bw / bh
                 valid_container_box = (candidate_conf >= 0.45 and 0.35 <= candidate_ratio <= 2.8 and 0.005 <= candidate_area <= 0.30)
+                if _object_model is not None:
+                    person_result = _object_model.predict(frame, conf=0.35, classes=[0], imgsz=640, verbose=False)[0]
+                    if any(_iou([x1, y1, x2, y2], person_box) > 0.05 for person_box in person_result.boxes.xyxy.tolist()):
+                        valid_container_box = False
                 if not valid_container_box:
                     candidate = None
             if candidate is not None and len(candidate.boxes):
