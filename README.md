@@ -30,6 +30,16 @@ python -m src.ingest --video data/raw/route.mp4 --gps data/raw/route.csv --outpu
 
 Her satır bir örneklenen kareyi temsil eder ve `frame_index`, `video_time_seconds`, `timestamp`, `latitude`, `longitude`, `image_path` alanlarını içerir. Görüntü kırpıntıları `data/processed/frames/` altında üretilir.
 
+## Hazır veri setlerini hazırlama
+
+RDD2022 arşivi `data/external/` altına çıkarıldıktan sonra Pascal VOC anotasyonlarını YOLO formatına dönüştürün:
+
+```powershell
+python -m src.prepare_rdd --source data/external/RDD2022_United_States --output data/ready/rdd2022_us
+```
+
+Kaynak ve lisans notları `data/external/SOURCES.md` dosyasındadır. Hazır veri eğitim için, gerçek rota verisi ise son test için ayrılmalıdır.
+
 ## Tasarım kararları
 
 İlk sürümde kare örnekleme saniye aralığı yerine kare adımıyla yapılır; böylece düşük FPS videolarda davranış öngörülebilir kalır. GPS eşleştirmesi için kare zamanı video başlangıç zamanına eklenir. GPS yan dosyasında başlangıç zamanı yoksa ilk GPS satırı video başlangıcı kabul edilir ve bu karar `--video-start` ile değiştirilebilir.
