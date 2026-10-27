@@ -128,9 +128,15 @@ class Handler(SimpleHTTPRequestHandler):
         if scene_path.exists():
             if _scene_model is None:
                 _scene_model = YOLO(str(scene_path))
-            # Pano/tabela nesneleri uzakta ve küçük olabildiği için düşük eşik kullanıyoruz.
-            scene_result = _scene_model.predict(frame, conf=0.12, imgsz=640, verbose=False)[0]
-            scene = [{"class_name": scene_result.names[int(c)], "confidence": float(p), "xyxy": [round(float(v), 2) for v in box]} for c, p, box in zip(scene_result.boxes.cls.tolist(), scene_result.boxes.conf.tolist(), scene_result.boxes.xyxy.tolist())]
+            # Küçük pano/kaldırım nesneleri için temel eşiği düşük tutup sınıfa göre filtreliyoruz.
+            scene_result = _scene_model.predict(frame, conf=0.08, imgsz=640, verbose=False)[0]
+            thresholds = {"road": 0.20, "sidewalk": 0.08, "lane_marking": 0.15, "trash_can": 0.10, "billboard": 0.12, "sign": 0.15}
+            scene = []
+            for c, p, box in zip(scene_result.boxes.cls.tolist(), scene_result.boxes.conf.tolist(), scene_result.boxes.xyxy.tolist()):
+                name, confidence = scene_result.names[int(c)], float(p)
+                if confidence < thresholds.get(name, 0.12):
+                    continue
+                scene.append({"class_name": name, "confidence": confidence, "xyxy": [round(float(v), 2) for v in box]})
         if _litter_model is None:
             _litter_model = YOLO(str(ROOT / "models" / "taco_yolo11s_best.pt"))
         litter_result = _litter_model.predict(frame, conf=0.25, verbose=False)[0]
