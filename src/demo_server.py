@@ -2,8 +2,11 @@
 
 import base64
 import cgi
+import csv
+from datetime import datetime, timezone
 import io
 import json
+import math
 import re
 import time
 import uuid
@@ -32,6 +35,64 @@ VIDEO_DIR.mkdir(parents=True, exist_ok=True)
 MAX_UPLOAD_BYTES = 500 * 1024 * 1024
 VIDEO_TTL_SECONDS = 60 * 60
 _video_tokens = {}
+REFERENCE_LIMITS_PATH = ROOT / "data" / "reference_limits.json"
+
+
+def _load_gps_rows(field):
+    if field is None or not getattr(field, "file", None):
+        return []
+    rows = []
+    first_absolute = None
+    for row in csv.DictReader(io.TextIOWrapper(field.file, encoding="utf-8-sig")):
+        try:
+            lat, lon = float(row["latitude"]), float(row["longitude"])
+            if "video_time_seconds" in row and row["video_time_seconds"]:
+                sec = float(row["video_time_seconds"])
+            else:
+                absolute = datetime.fromisoformat(row["timestamp"].replace("Z", "+00:00")).timestamp()
+                if first_absolute is None:
+                    first_absolute = absolute
+                sec = absolute - first_absolute
+            rows.append({"seconds": sec, "latitude": lat, "longitude": lon})
+        except (KeyError, TypeError, ValueError):
+            continue
+    return sorted(rows, key=lambda x: x["seconds"])
+
+
+def _gps_at(rows, seconds):
+    if not rows:
+        return None
+    before = rows[0]
+    after = rows[-1]
+    for row in rows:
+        if row["seconds"] <= seconds:
+            before = row
+        if row["seconds"] >= seconds:
+            after = row
+            break
+    span = after["seconds"] - before["seconds"]
+    ratio = 0.0 if span <= 0 else min(1.0, max(0.0, (seconds - before["seconds"]) / span))
+    return {"latitude": before["latitude"] + (after["latitude"] - before["latitude"]) * ratio, "longitude": before["longitude"] + (after["longitude"] - before["longitude"]) * ratio}
+
+
+def _nearby_limit(gps_point):
+    if not gps_point or not REFERENCE_LIMITS_PATH.exists():
+        return None
+    try:
+        locations = json.loads(REFERENCE_LIMITS_PATH.read_text(encoding="utf-8")).get("locations", [])
+    except (OSError, ValueError):
+        return None
+    best = None
+    for item in locations:
+        try:
+            dy = (float(item["latitude"]) - gps_point["latitude"]) * 111_000
+            dx = (float(item["longitude"]) - gps_point["longitude"]) * 111_000 * math.cos(math.radians(gps_point["latitude"]))
+            distance = math.hypot(dx, dy)
+            if distance <= float(item.get("radius_m", 25)) and (best is None or distance < best["distance_m"]):
+                best = {**item, "distance_m": round(distance, 1)}
+        except (KeyError, TypeError, ValueError):
+            continue
+    return best
 
 
 def _cleanup_video_dir() -> None:
@@ -157,6 +218,7 @@ class Handler(SimpleHTTPRequestHandler):
         if "video" not in form or not getattr(form["video"], "file", None):
             self._json({"error": "video alanı gerekli"}, 400)
             return
+        gps_rows = _load_gps_rows(form["gps"] if "gps" in form else None)
         token = uuid.uuid4().hex
         raw_path = VIDEO_DIR / f"{token}.input"
         # VP8/WebM tarayıcılarla uyumludur; mp4v bazı tarayıcılarda oynatılmaz.
@@ -228,6 +290,7 @@ class Handler(SimpleHTTPRequestHandler):
                 ok, frame = cap.read()
                 if not ok:
                     break
+                gps_point = _gps_at(gps_rows, frame_idx / max(fps, 1.0))
                 blurred = frame.copy()
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 if _face_detector is not None:
@@ -326,8 +389,21 @@ class Handler(SimpleHTTPRequestHandler):
                         scene_event = {"type": item["class_name"], "confidence": round(item["confidence"], 3), "class_name": item["class_name"]}
                         if item["class_name"] in {"billboard", "sign"}:
                             scene_event.update({"width_px": round(max(0, sx2 - sx1), 1), "height_px": round(max(0, sy2 - sy1), 1), "area_px": round(max(0, sx2 - sx1) * max(0, sy2 - sy1), 1)})
+                            limit = _nearby_limit(gps_point)
+                            if limit and "max_width_px" in limit and "max_height_px" in limit:
+                                allowed_w = float(limit["max_width_px"]) * 1.05
+                                allowed_h = float(limit["max_height_px"]) * 1.05
+                                scene_event.update({"limit_name": limit.get("name", "referans"), "distance_m": limit["distance_m"], "limit_status": "SINIR AŞILDI" if sx2 - sx1 > allowed_w or sy2 - sy1 > allowed_h else "UYGUN", "max_width_px": limit["max_width_px"], "max_height_px": limit["max_height_px"], "tolerance": 0.05})
                         frame_events.append(scene_event)
                         x1, y1, x2, y2 = [int(v) for v in item["box"]]; cv2.rectangle(blurred, (x1, y1), (x2, y2), (180, 0, 180), 2)
+                        if item["class_name"] in {"billboard", "sign"} and gps_point:
+                            limit = _nearby_limit(gps_point)
+                            if limit and "max_width_px" in limit and "max_height_px" in limit:
+                                allowed_w = float(limit["max_width_px"]) * 1.05
+                                allowed_h = float(limit["max_height_px"]) * 1.05
+                                status = "SINIR ASILDI" if x2 - x1 > allowed_w or y2 - y1 > allowed_h else "UYGUN"
+                                color = (0, 0, 255) if status == "SINIR ASILDI" else (0, 180, 0)
+                                cv2.putText(blurred, status, (x1, min(height - 8, y2 + 20)), cv2.FONT_HERSHEY_SIMPLEX, 0.55, color, 2)
                     if frame_events:
                         events.append({"time_sec": round(frame_idx / fps, 2), "items": frame_events})
                 elif frame_idx % sample_every != 0:
@@ -359,7 +435,7 @@ class Handler(SimpleHTTPRequestHandler):
             self._json({"error": "işlenen video çıktısı doğrulanamadı"}, 500)
             return
         _video_tokens[token] = time.time()
-        self._json({"video_url": f"/video-results/{output_path.name}", "frames": frame_idx, "fps": round(fps, 2), "sample_every": sample_every, "counts": counts, "events": events[:200], "privacy_note": "Yalnızca tespit edilen yüz ve plaka bölgeleri bulanıklaştırıldı; ham video saklanmadı."})
+        self._json({"video_url": f"/video-results/{output_path.name}", "frames": frame_idx, "fps": round(fps, 2), "sample_every": sample_every, "counts": counts, "events": events[:200], "gps_enabled": bool(gps_rows), "reference_limits_loaded": REFERENCE_LIMITS_PATH.exists(), "privacy_note": "Yalnızca tespit edilen yüz ve plaka bölgeleri bulanıklaştırıldı; ham video saklanmadı."})
 
     def _container_classify(self):
         form = cgi.FieldStorage(fp=self.rfile, headers=self.headers, environ={"REQUEST_METHOD": "POST", "CONTENT_TYPE": self.headers.get("Content-Type", "")})
