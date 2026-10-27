@@ -107,7 +107,7 @@ class Handler(SimpleHTTPRequestHandler):
         if frame is None:
             self._json({"error": "görsel okunamadı"}, 400)
             return
-        global _road_model, _litter_model
+        global _road_model, _litter_model, _container_model, _container_state_model
         if _road_model is None:
             _road_model = YOLO(str(ROOT / "models" / "yolo12s_seed0_best.pt"))
         road_result = _road_model.predict(frame, conf=0.10, verbose=False)[0]
@@ -116,7 +116,24 @@ class Handler(SimpleHTTPRequestHandler):
             _litter_model = YOLO("yolo11n.pt")
         litter_result = _litter_model.predict(frame, conf=0.25, verbose=False)[0]
         litter = [{"class_name": "litter_candidate", "source_object": litter_result.names[int(c)], "confidence": float(p)} for c, p in zip(litter_result.boxes.cls.tolist(), litter_result.boxes.conf.tolist()) if litter_result.names[int(c)] in LITTER_CLASSES]
-        self._json({"road_damage": road, "ground_litter": litter, "litter_model": "YOLO11n COCO baseline"})
+        container = None
+        container_path = ROOT / "runs" / "detect" / "runs" / "container_detection" / "train" / "weights" / "best.pt"
+        state_path = ROOT / "runs" / "classify" / "runs" / "container" / "train" / "weights" / "best.pt"
+        if container_path.exists() and state_path.exists():
+            if _container_model is None:
+                _container_model = YOLO(str(container_path))
+            candidate = _container_model.predict(frame, conf=0.25, imgsz=640, max_det=1, verbose=False)[0]
+            if len(candidate.boxes):
+                if _container_state_model is None:
+                    _container_state_model = YOLO(str(state_path))
+                state = _container_state_model.predict(frame, verbose=False)[0]
+                container = {"class_name": state.names[int(state.probs.top1)], "confidence": float(state.probs.top1conf)}
+        issues = []
+        issues.extend({"type": "road_damage", **item} for item in road)
+        issues.extend({"type": "ground_litter", **item} for item in litter)
+        if container:
+            issues.append({"type": "container", **container})
+        self._json({"issues": issues, "road_damage": road, "ground_litter": litter, "container": container, "litter_model": "YOLO11n COCO baseline"})
 
     def _json(self, payload, status=200):
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
