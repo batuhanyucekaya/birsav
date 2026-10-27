@@ -1,0 +1,16 @@
+path: C:/Users/batuh/OneDrive/Belgeler/ChatGPT/birsav/data/ceymo_small
+train: images/train
+val: images/val
+nc: 11
+names:
+  0: bus_lane
+  1: cycle_lane
+  2: diamond
+  3: junction_box
+  4: left_arrow
+  5: pedestrian_crossing
+  6: right_arrow
+  7: straight_arrow
+  8: slow
+  9: straight_left_arrow
+  10: straight_right_arrow
