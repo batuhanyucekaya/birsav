@@ -62,7 +62,7 @@ class Handler(SimpleHTTPRequestHandler):
         if frame is None:
             self._json({"error": "görsel okunamadı"}, 400)
             return
-        model_path = ROOT / "runs" / "classify" / "runs" / "container" / "train" / "weights" / "best.pt"
+        model_path = ROOT / "runs" / "detect" / "runs" / "container_detection" / "train" / "weights" / "best.pt"
         if not model_path.exists():
             self._json({"error": "konteyner modeli bulunamadı; önce eğitim çalıştırılmalı"}, 503)
             return
@@ -70,9 +70,14 @@ class Handler(SimpleHTTPRequestHandler):
         if _container_model is None:
             _container_model = YOLO(str(model_path))
         model = _container_model
-        result = model.predict(frame, verbose=False)[0]
-        top1 = int(result.probs.top1)
-        self._json({"model": "Konteyner YOLO11n sınıflandırıcı", "class_name": result.names[top1], "confidence": float(result.probs.top1conf)})
+        result = model.predict(frame, conf=0.25, verbose=False)[0]
+        detections = [{"class_name": result.names[int(c)], "confidence": float(p), "xyxy": [round(float(v), 2) for v in box]} for c, p, box in zip(result.boxes.cls.tolist(), result.boxes.conf.tolist(), result.boxes.xyxy.tolist())]
+        annotated = result.plot()
+        ok, encoded = cv2.imencode(".jpg", annotated)
+        if not ok:
+            self._json({"error": "sonuç görseli üretilemedi"}, 500)
+            return
+        self._json({"model": "Konteyner YOLO11n detection", "detections": detections, "image_base64": base64.b64encode(encoded.tobytes()).decode("ascii")})
 
     def _analyze(self):
         form = cgi.FieldStorage(fp=self.rfile, headers=self.headers, environ={"REQUEST_METHOD": "POST", "CONTENT_TYPE": self.headers.get("Content-Type", "")})
