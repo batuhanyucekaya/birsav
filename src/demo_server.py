@@ -63,6 +63,16 @@ def _smooth_boxes(previous, current, match_iou=0.25, alpha=0.35, max_missing=2):
     return updated
 
 
+def _dedupe_boxes(items, overlap=0.45):
+    """Aynı sınıftaki üst üste binen kutuları en güvenilir kutuya indirger."""
+    kept = []
+    for item in sorted(items, key=lambda x: float(x.get("confidence", 0)), reverse=True):
+        if any(item.get("class_name") == old.get("class_name") and _iou(item["box"], old["box"]) >= overlap for old in kept):
+            continue
+        kept.append(item)
+    return kept
+
+
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(ROOT / "web"), **kwargs)
@@ -179,6 +189,16 @@ class Handler(SimpleHTTPRequestHandler):
                         (int(row[0]), int(row[1]), int(row[2]), int(row[3]))
                         for row in face_rows if float(row[14]) >= 0.58 and row[2] >= 20 and row[3] >= 20
                     ]
+                    # İlk karelerde küçük/uzak yüzleri yakalamak için kısa büyütülmüş-kare takviyesi.
+                    if not faces and frame_idx < 6:
+                        scale = 1.5
+                        enlarged = cv2.resize(frame, None, fx=scale, fy=scale, interpolation=cv2.INTER_LINEAR)
+                        _face_detector.setInputSize((enlarged.shape[1], enlarged.shape[0]))
+                        _, enlarged_rows = _face_detector.detect(enlarged)
+                        faces = [] if enlarged_rows is None else [
+                            (int(row[0] / scale), int(row[1] / scale), int(row[2] / scale), int(row[3] / scale))
+                            for row in enlarged_rows if float(row[14]) >= 0.52 and row[2] >= 24 and row[3] >= 24
+                        ]
                 else:
                     faces = _face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=7, minSize=(32, 32)) if _face_cascade is not None and not _face_cascade.empty() else []
                 plates = _plate_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=4, minSize=(30, 12)) if not _plate_cascade.empty() else []
@@ -217,7 +237,7 @@ class Handler(SimpleHTTPRequestHandler):
                             scene_current.append({"kind": "scene", "class_name": name, "confidence": float(p), "box": box})
                     road_tracks = _smooth_boxes(road_tracks, road_current, match_iou=0.25, alpha=0.35, max_missing=3)
                     litter_tracks = _smooth_boxes(litter_tracks, litter_current, match_iou=0.18, alpha=0.35, max_missing=3)
-                    scene_tracks = _smooth_boxes(scene_tracks, scene_current, match_iou=0.25, alpha=0.35, max_missing=3)
+                    scene_tracks = _smooth_boxes(scene_tracks, _dedupe_boxes(scene_current), match_iou=0.25, alpha=0.35, max_missing=3)
                     for item in [x for x in road_tracks if x["hits"] >= 1 and x["missing"] <= 3]:
                         counts["road_damage"] += 1; frame_events.append({"type": "road_damage", "confidence": round(item["confidence"], 3), "class_name": item["class_name"]})
                         x1, y1, x2, y2 = [int(v) for v in item["box"]]; cv2.rectangle(blurred, (x1, y1), (x2, y2), (0, 0, 255), 3)
