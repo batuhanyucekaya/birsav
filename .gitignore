@@ -24,5 +24,7 @@ data/container_dataset/
 data/container_detection/
 data/ceymo_medium/
 datasets/
+data/mapillary_seg_expanded/
+data/mapillary_seg_combined/
 yolo11n.pt
 

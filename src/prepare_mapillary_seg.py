@@ -5,6 +5,7 @@ from __future__ import annotations
 import random
 import shutil
 import json
+import argparse
 from pathlib import Path
 
 import cv2
@@ -53,19 +54,50 @@ def convert_mask(mask_path: Path, label_path: Path) -> None:
 
 
 def main() -> None:
-    if OUT.exists():
-        shutil.rmtree(OUT)
-    images = sorted((SRC / "training" / "images").glob("*.jpg"))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--source", type=Path, default=SRC)
+    parser.add_argument("--output", type=Path, default=OUT)
+    args = parser.parse_args()
+    source, output = args.source, args.output
+    config_path = source / "config_v2.0.json"
+    if not config_path.exists():
+        config_path = SRC / "config_v2.0.json"
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    colors = {i: tuple(reversed(item["color"])) for i, item in enumerate(config["labels"])}
+    if output.exists():
+        shutil.rmtree(output)
+    images = sorted((source / "training" / "images").glob("*.jpg"))
     random.Random(42).shuffle(images)
     split_at = max(1, int(len(images) * 0.8))
     for split, group in (("train", images[:split_at]), ("val", images[split_at:])):
-        (OUT / "images" / split).mkdir(parents=True, exist_ok=True)
-        (OUT / "labels" / split).mkdir(parents=True, exist_ok=True)
+        (output / "images" / split).mkdir(parents=True, exist_ok=True)
+        (output / "labels" / split).mkdir(parents=True, exist_ok=True)
         for image in group:
-            shutil.copy2(image, OUT / "images" / split / image.name)
-            convert_mask(SRC / "training" / "v2.0" / "labels" / f"{image.stem}.png", OUT / "labels" / split / f"{image.stem}.txt")
-    (OUT / "data.yaml").write_text(
-        f"path: {OUT.resolve().as_posix()}\ntrain: images/train\nval: images/val\nnc: {len(NAMES)}\nnames: {NAMES}\n",
+            shutil.copy2(image, output / "images" / split / image.name)
+            # Mask dönüşümündeki renk tablosunu kaynak veri kümesine göre kullan.
+            mask_path = source / "training" / "v2.0" / "labels" / f"{image.stem}.png"
+            mask = cv2.imread(str(mask_path), cv2.IMREAD_UNCHANGED)
+            label_path = output / "labels" / split / f"{image.stem}.txt"
+            if mask is None:
+                label_path.write_text("", encoding="utf-8")
+                continue
+            scale = min(1.0, 1024.0 / max(mask.shape[:2]))
+            if scale < 1.0:
+                mask = cv2.resize(mask, (int(mask.shape[1] * scale), int(mask.shape[0] * scale)), interpolation=cv2.INTER_NEAREST)
+            height, width = mask.shape[:2]
+            lines = []
+            for source_id, target_id in TARGETS.items():
+                binary = np.all(mask == np.array(colors[source_id], dtype=np.uint8), axis=2).astype(np.uint8)
+                contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                for contour in contours:
+                    if cv2.contourArea(contour) < 30 or len(contour) < 3:
+                        continue
+                    polygon = cv2.approxPolyDP(contour, max(1.0, 0.002 * cv2.arcLength(contour, True)), True).reshape(-1, 2)
+                    if len(polygon) >= 3:
+                        lines.append(f"{target_id} " + " ".join(f"{x / width:.6f} {y / height:.6f}" for x, y in polygon))
+            label_path.write_text("\n".join(lines), encoding="utf-8")
+    (output / "data.yaml").write_text(
+        f"path: {output.resolve().as_posix()}\ntrain: images/train\nval: images/val\nnc: {len(NAMES)}\nnames: {NAMES}\n",
         encoding="utf-8",
     )
     print(f"Hazır: train={len(images[:split_at])}, val={len(images[split_at:])}")
