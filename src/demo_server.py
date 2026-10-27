@@ -21,7 +21,8 @@ _container_state_model = None
 _lane_model = None
 _scene_model = None
 _litter_model = None
-_privacy_model = None
+_face_cascade = None
+_plate_cascade = None
 LITTER_CLASSES = {"Plastic bag & wrapper", "Cigarette", "Bottle", "Bottle cap", "Can", "Other plastic", "Carton", "Cup", "Other"}
 VIDEO_DIR = ROOT / "tmp" / "video_results"
 VIDEO_DIR.mkdir(parents=True, exist_ok=True)
@@ -102,9 +103,11 @@ class Handler(SimpleHTTPRequestHandler):
             return
         sample_every = max(1, int(round(fps / 3)))
         writer = cv2.VideoWriter(str(output_path), cv2.VideoWriter_fourcc(*"mp4v"), fps, (width, height))
-        global _privacy_model, _road_model, _litter_model, _scene_model
-        if _privacy_model is None:
-            _privacy_model = YOLO(str(ROOT / "yolo11n.pt"))
+        global _face_cascade, _plate_cascade, _road_model, _litter_model, _scene_model
+        if _face_cascade is None:
+            _face_cascade = cv2.CascadeClassifier(str(ROOT / "models" / "privacy" / "haarcascade_frontalface_default.xml"))
+        if _plate_cascade is None:
+            _plate_cascade = cv2.CascadeClassifier(str(ROOT / "models" / "privacy" / "haarcascade_russian_plate_number.xml"))
         if _road_model is None:
             _road_model = YOLO(str(ROOT / "models" / "yolo12s_seed0_best.pt"))
         if _litter_model is None:
@@ -112,7 +115,7 @@ class Handler(SimpleHTTPRequestHandler):
         scene_path = ROOT / "runs" / "segment" / "runs" / "segment" / "runs" / "mapillary_seg" / "train_advertisement_fix" / "weights" / "best.pt"
         if scene_path.exists() and _scene_model is None:
             _scene_model = YOLO(str(scene_path))
-        counts = {"privacy_frames": 0, "road_damage": 0, "ground_litter": 0, "scene": 0}
+        counts = {"privacy_frames": 0, "faces_blurred": 0, "plates_blurred": 0, "road_damage": 0, "ground_litter": 0, "scene": 0}
         events = []
         frame_idx = 0
         try:
@@ -120,16 +123,18 @@ class Handler(SimpleHTTPRequestHandler):
                 ok, frame = cap.read()
                 if not ok:
                     break
-                # Her karede kişi/araç bölgelerini bulanıklaştır; ham kare kaydedilmez.
-                privacy = _privacy_model.predict(frame, conf=0.35, classes=[0, 2, 5, 7], imgsz=320, verbose=False)[0]
                 blurred = frame.copy()
-                if len(privacy.boxes):
+                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                faces = _face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(24, 24)) if not _face_cascade.empty() else []
+                plates = _plate_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=4, minSize=(30, 12)) if not _plate_cascade.empty() else []
+                if len(faces) or len(plates):
                     counts["privacy_frames"] += 1
-                    for box in privacy.boxes.xyxy.tolist():
-                        x1, y1, x2, y2 = [max(0, int(v)) for v in box]
-                        roi = blurred[y1:min(height, y2), x1:min(width, x2)]
+                    counts["faces_blurred"] += len(faces); counts["plates_blurred"] += len(plates)
+                    for x, y, w, h in list(faces) + list(plates):
+                        x1, y1, x2, y2 = max(0, int(x)), max(0, int(y)), min(width, int(x + w)), min(height, int(y + h))
+                        roi = blurred[y1:y2, x1:x2]
                         if roi.size:
-                            blurred[y1:min(height, y2), x1:min(width, x2)] = cv2.GaussianBlur(roi, (0, 0), 21)
+                            blurred[y1:y2, x1:x2] = cv2.GaussianBlur(roi, (0, 0), 21)
                 if frame_idx % sample_every == 0:
                     road_result = _road_model.predict(blurred, conf=0.25, verbose=False)[0]
                     litter_result = _litter_model.predict(blurred, conf=0.35, verbose=False)[0]
@@ -154,7 +159,7 @@ class Handler(SimpleHTTPRequestHandler):
                 frame_idx += 1
         finally:
             cap.release(); writer.release(); raw_path.unlink(missing_ok=True)
-        self._json({"video_url": f"/video-results/{output_path.name}", "frames": frame_idx, "fps": round(fps, 2), "sample_every": sample_every, "counts": counts, "events": events[:200], "privacy_note": "Kişi/araç bölgeleri bulanıklaştırıldı; ham video saklanmadı."})
+        self._json({"video_url": f"/video-results/{output_path.name}", "frames": frame_idx, "fps": round(fps, 2), "sample_every": sample_every, "counts": counts, "events": events[:200], "privacy_note": "Yalnızca tespit edilen yüz ve plaka bölgeleri bulanıklaştırıldı; ham video saklanmadı."})
 
     def _container_classify(self):
         form = cgi.FieldStorage(fp=self.rfile, headers=self.headers, environ={"REQUEST_METHOD": "POST", "CONTENT_TYPE": self.headers.get("Content-Type", "")})
