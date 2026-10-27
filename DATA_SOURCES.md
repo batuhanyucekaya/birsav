@@ -17,3 +17,7 @@ Kaynak: https://huggingface.co/datasets/pictograph/taco
 Yerde çöp için kullanılacak. Veri seti CC BY 4.0 olarak belirtilmiştir; atıf bilgisi veri seti kartında korunmalıdır.
 
 Hazır veri eğitim ve geliştirme için kullanılacak; nihai başarı ölçümü ayrı bir test kümesinde yapılmalıdır.
+
+## Demo görüntüleri
+
+`data/demo/road_damaged.jpg` ve `data/demo/road_clean.jpg`, RDD2022’nin Hugging Face aynasından yalnızca yerel demo testi için alınmıştır. İkinci görüntü veri etiketinde boş olsa da fiziksel olarak kusursuz olduğu garanti edilmez; modelin yanlış alarm davranışını göstermek için kullanılır. Kaynak: https://huggingface.co/datasets/dronefreak/RDD2022

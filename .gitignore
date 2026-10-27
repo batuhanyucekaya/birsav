@@ -6,6 +6,7 @@ data/processed/
 data/outputs/
 data/external/
 data/ready/
+data/demo/
 *.mp4
 *.mov
 *.avi
