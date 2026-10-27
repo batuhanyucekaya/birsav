@@ -22,5 +22,7 @@ models/*.pt
 runs/
 data/container_dataset/
 data/container_detection/
+data/ceymo_medium/
+datasets/
 yolo11n.pt
 
