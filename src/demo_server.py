@@ -17,7 +17,7 @@ _road_model = None
 _container_model = None
 _container_state_model = None
 _litter_model = None
-LITTER_CLASSES = {"bottle", "cup", "banana", "apple", "backpack", "handbag", "bowl", "fork", "knife", "spoon", "wine glass", "book", "umbrella", "sports ball"}
+LITTER_CLASSES = {"Plastic bag & wrapper", "Cigarette", "Bottle", "Bottle cap", "Can", "Other plastic", "Carton", "Cup", "Other"}
 
 
 class Handler(SimpleHTTPRequestHandler):
@@ -113,7 +113,7 @@ class Handler(SimpleHTTPRequestHandler):
         road_result = _road_model.predict(frame, conf=0.10, verbose=False)[0]
         road = [{"class_name": road_result.names[int(c)], "confidence": float(p)} for c, p in zip(road_result.boxes.cls.tolist(), road_result.boxes.conf.tolist())]
         if _litter_model is None:
-            _litter_model = YOLO("yolo11n.pt")
+            _litter_model = YOLO(str(ROOT / "models" / "taco_yolo11s_best.pt"))
         litter_result = _litter_model.predict(frame, conf=0.25, verbose=False)[0]
         litter = [{"class_name": "litter_candidate", "source_object": litter_result.names[int(c)], "confidence": float(p)} for c, p in zip(litter_result.boxes.cls.tolist(), litter_result.boxes.conf.tolist()) if litter_result.names[int(c)] in LITTER_CLASSES]
         container = None
@@ -153,7 +153,7 @@ class Handler(SimpleHTTPRequestHandler):
         issues.extend({"type": "ground_litter", **item} for item in litter)
         if container:
             issues.append({"type": "container", **container})
-        self._json({"issues": issues, "road_damage": road, "ground_litter": litter, "container": container, "image_base64": base64.b64encode(encoded.tobytes()).decode("ascii"), "litter_model": "YOLO11n COCO baseline"})
+        self._json({"issues": issues, "road_damage": road, "ground_litter": litter, "container": container, "image_base64": base64.b64encode(encoded.tobytes()).decode("ascii"), "litter_model": "TACO YOLO11s hazır model"})
 
     def _json(self, payload, status=200):
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
