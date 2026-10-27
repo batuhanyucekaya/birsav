@@ -22,4 +22,5 @@ models/*.pt
 runs/
 data/container_dataset/
 data/container_detection/
+yolo11n.pt
 
