@@ -20,7 +20,9 @@
       {id:1,type:'Asfalt bozukluğu',status:'Yeni',confidence:.91,lat:41.0121,lng:28.9762,time:'2026-10-27T09:10:00',size:'2.1 m²'},
       {id:2,type:'Yerde çöp',status:'Personel onayladı',confidence:.87,lat:41.0152,lng:28.9791,time:'2026-10-27T09:24:00',size:'',},
       {id:3,type:'Çöp konteyneri doluluğu',status:'Birime iletildi',confidence:.84,lat:41.0098,lng:28.9818,time:'2026-10-27T09:42:00',size:'Taşmış'},
-      {id:4,type:'Moloz ve atık bırakılması',status:'Yeni',confidence:.79,lat:41.0180,lng:28.9730,time:'2026-10-27T10:05:00',size:'',}
+      {id:4,type:'Moloz ve atık bırakılması',status:'Yeni',confidence:.79,lat:41.0180,lng:28.9730,time:'2026-10-27T10:05:00',size:''},
+      {id:5,type:'Sokak işgali',status:'Yeni',confidence:.76,lat:41.0140,lng:28.9840,time:'2026-10-27T10:16:00',size:'Kaldırım geçişi daralmış'},
+      {id:6,type:'Reklam panosu',status:'Yanlış tespit',confidence:.68,lat:41.0110,lng:28.9700,time:'2026-10-27T10:28:00',size:'Kayıt karşılaştırması bekleniyor'}
     ];
     const map=L.map('map').setView([41.013,28.978],14);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);const markers=new Map();
     const typeEl=document.querySelector('#type'),statusEl=document.querySelector('#status'),dateEl=document.querySelector('#date'),cards=document.querySelector('#cards');[...new Set(demo.map(x=>x.type))].forEach(t=>typeEl.add(new Option(t,t)));
