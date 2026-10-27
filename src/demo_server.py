@@ -17,6 +17,7 @@ _road_model = None
 _container_model = None
 _container_state_model = None
 _lane_model = None
+_scene_model = None
 _litter_model = None
 LITTER_CLASSES = {"Plastic bag & wrapper", "Cigarette", "Bottle", "Bottle cap", "Can", "Other plastic", "Carton", "Cup", "Other"}
 
@@ -108,7 +109,7 @@ class Handler(SimpleHTTPRequestHandler):
         if frame is None:
             self._json({"error": "görsel okunamadı"}, 400)
             return
-        global _road_model, _litter_model, _container_model, _container_state_model, _lane_model
+        global _road_model, _litter_model, _container_model, _container_state_model, _lane_model, _scene_model
         if _road_model is None:
             _road_model = YOLO(str(ROOT / "models" / "yolo12s_seed0_best.pt"))
         road_result = _road_model.predict(frame, conf=0.10, verbose=False)[0]
@@ -120,6 +121,13 @@ class Handler(SimpleHTTPRequestHandler):
                 _lane_model = YOLO(str(lane_path))
             lane_result = _lane_model.predict(frame, conf=0.20, imgsz=320, verbose=False)[0]
             lane = [{"class_name": lane_result.names[int(c)], "confidence": float(p), "xyxy": [round(float(v), 2) for v in box]} for c, p, box in zip(lane_result.boxes.cls.tolist(), lane_result.boxes.conf.tolist(), lane_result.boxes.xyxy.tolist())]
+        scene = []
+        scene_path = ROOT / "runs" / "segment" / "runs" / "mapillary_seg" / "train_more_cpu" / "weights" / "best.pt"
+        if scene_path.exists():
+            if _scene_model is None:
+                _scene_model = YOLO(str(scene_path))
+            scene_result = _scene_model.predict(frame, conf=0.25, imgsz=320, verbose=False)[0]
+            scene = [{"class_name": scene_result.names[int(c)], "confidence": float(p), "xyxy": [round(float(v), 2) for v in box]} for c, p, box in zip(scene_result.boxes.cls.tolist(), scene_result.boxes.conf.tolist(), scene_result.boxes.xyxy.tolist())]
         if _litter_model is None:
             _litter_model = YOLO(str(ROOT / "models" / "taco_yolo11s_best.pt"))
         litter_result = _litter_model.predict(frame, conf=0.25, verbose=False)[0]
@@ -150,6 +158,10 @@ class Handler(SimpleHTTPRequestHandler):
             x1, y1, x2, y2 = [int(v) for v in item["xyxy"]]
             cv2.rectangle(annotated, (x1, y1), (x2, y2), (0, 180, 0), 3)
             cv2.putText(annotated, f"lane: {item['class_name']} {item['confidence']:.0%}", (x1, max(25, y1 - 8)), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 180, 0), 2)
+        for item in scene:
+            x1, y1, x2, y2 = [int(v) for v in item["xyxy"]]
+            cv2.rectangle(annotated, (x1, y1), (x2, y2), (180, 0, 180), 2)
+            cv2.putText(annotated, f"scene: {item['class_name']} {item['confidence']:.0%}", (x1, max(25, y1 - 8)), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (180, 0, 180), 2)
         for cls, conf, xyxy in zip(litter_result.boxes.cls.tolist(), litter_result.boxes.conf.tolist(), litter_result.boxes.xyxy.tolist()):
             if litter_result.names[int(cls)] not in LITTER_CLASSES:
                 continue
@@ -163,10 +175,11 @@ class Handler(SimpleHTTPRequestHandler):
         issues = []
         issues.extend({"type": "road_damage", **item} for item in road)
         issues.extend({"type": "lane_marking", **item} for item in lane)
+        issues.extend({"type": "scene", **item} for item in scene)
         issues.extend({"type": "ground_litter", **item} for item in litter)
         if container:
             issues.append({"type": "container", **container})
-        self._json({"issues": issues, "road_damage": road, "lane_markings": lane, "ground_litter": litter, "container": container, "image_base64": base64.b64encode(encoded.tobytes()).decode("ascii"), "litter_model": "TACO YOLO11s hazır model", "lane_model": "CeyMo YOLO11n (20 epoch pilot)" if lane_path.exists() else None})
+        self._json({"issues": issues, "road_damage": road, "lane_markings": lane, "scene_segments": scene, "ground_litter": litter, "container": container, "image_base64": base64.b64encode(encoded.tobytes()).decode("ascii"), "litter_model": "TACO YOLO11s hazır model", "lane_model": "CeyMo YOLO11n (20 epoch pilot)" if lane_path.exists() else None, "scene_model": "Mapillary YOLO11n-seg (5 epoch pilot)" if scene_path.exists() else None})
 
     def _json(self, payload, status=200):
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")

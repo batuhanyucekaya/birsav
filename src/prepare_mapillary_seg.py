@@ -45,6 +45,8 @@ def convert_mask(mask_path: Path, label_path: Path) -> None:
 
 
 def main() -> None:
+    if OUT.exists():
+        shutil.rmtree(OUT)
     images = sorted((SRC / "training" / "images").glob("*.jpg"))
     random.Random(42).shuffle(images)
     split_at = max(1, int(len(images) * 0.8))
