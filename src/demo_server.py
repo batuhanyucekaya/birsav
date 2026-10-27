@@ -4,6 +4,7 @@ import base64
 import cgi
 import io
 import json
+import re
 import time
 import uuid
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -28,6 +29,18 @@ _plate_cascade = None
 LITTER_CLASSES = {"Plastic bag & wrapper", "Cigarette", "Bottle", "Bottle cap", "Can", "Other plastic", "Carton", "Cup", "Other"}
 VIDEO_DIR = ROOT / "tmp" / "video_results"
 VIDEO_DIR.mkdir(parents=True, exist_ok=True)
+MAX_UPLOAD_BYTES = 500 * 1024 * 1024
+VIDEO_TTL_SECONDS = 60 * 60
+
+
+def _cleanup_video_dir() -> None:
+    cutoff = time.time() - VIDEO_TTL_SECONDS
+    for path in VIDEO_DIR.iterdir():
+        try:
+            if path.is_file() and path.stat().st_mtime < cutoff:
+                path.unlink(missing_ok=True)
+        except OSError:
+            continue
 
 
 def _iou(a, b):
@@ -113,7 +126,11 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         if self.path.startswith("/video-results/"):
+            _cleanup_video_dir()
             name = Path(self.path.split("?", 1)[0]).name
+            if not re.fullmatch(r"[0-9a-f]{32}\.(?:webm|mp4)", name):
+                self.send_error(404)
+                return
             target = VIDEO_DIR / name
             if target.exists() and target.suffix in {".mp4", ".webm"}:
                 data = target.read_bytes()
@@ -136,7 +153,26 @@ class Handler(SimpleHTTPRequestHandler):
         raw_path = VIDEO_DIR / f"{token}.input"
         # VP8/WebM tarayıcılarla uyumludur; mp4v bazı tarayıcılarda oynatılmaz.
         output_path = VIDEO_DIR / f"{token}.webm"
-        raw_path.write_bytes(form["video"].file.read())
+        _cleanup_video_dir()
+        total = 0
+        try:
+            with raw_path.open("wb") as output:
+                while True:
+                    chunk = form["video"].file.read(1024 * 1024)
+                    if not chunk:
+                        break
+                    total += len(chunk)
+                    if total > MAX_UPLOAD_BYTES:
+                        raise ValueError("video dosyası boyut sınırını aşıyor")
+                    output.write(chunk)
+        except ValueError as exc:
+            raw_path.unlink(missing_ok=True)
+            self._json({"error": str(exc), "max_upload_mb": MAX_UPLOAD_BYTES // (1024 * 1024)}, 413)
+            return
+        except OSError:
+            raw_path.unlink(missing_ok=True)
+            self._json({"error": "video geçici olarak kaydedilemedi"}, 507)
+            return
         cap = cv2.VideoCapture(str(raw_path))
         if not cap.isOpened():
             raw_path.unlink(missing_ok=True)
