@@ -69,10 +69,10 @@ class Handler(SimpleHTTPRequestHandler):
         if self.path.startswith("/video-results/"):
             name = Path(self.path.split("?", 1)[0]).name
             target = VIDEO_DIR / name
-            if target.exists() and target.suffix == ".mp4":
+            if target.exists() and target.suffix in {".mp4", ".webm"}:
                 data = target.read_bytes()
                 self.send_response(200)
-                self.send_header("Content-Type", "video/mp4")
+                self.send_header("Content-Type", "video/webm" if target.suffix == ".webm" else "video/mp4")
                 self.send_header("Content-Length", str(len(data)))
                 self.end_headers()
                 self.wfile.write(data)
@@ -88,7 +88,8 @@ class Handler(SimpleHTTPRequestHandler):
             return
         token = uuid.uuid4().hex
         raw_path = VIDEO_DIR / f"{token}.input"
-        output_path = VIDEO_DIR / f"{token}.mp4"
+        # VP8/WebM tarayıcılarla uyumludur; mp4v bazı tarayıcılarda oynatılmaz.
+        output_path = VIDEO_DIR / f"{token}.webm"
         raw_path.write_bytes(form["video"].file.read())
         cap = cv2.VideoCapture(str(raw_path))
         if not cap.isOpened():
@@ -102,7 +103,11 @@ class Handler(SimpleHTTPRequestHandler):
             self._json({"error": "video boyutu okunamadı"}, 400)
             return
         sample_every = max(1, int(round(fps / 3)))
-        writer = cv2.VideoWriter(str(output_path), cv2.VideoWriter_fourcc(*"mp4v"), fps, (width, height))
+        writer = cv2.VideoWriter(str(output_path), cv2.VideoWriter_fourcc(*"VP80"), fps, (width, height))
+        if not writer.isOpened():
+            cap.release(); raw_path.unlink(missing_ok=True)
+            self._json({"error": "tarayıcı uyumlu video kodlayıcı açılamadı"}, 500)
+            return
         global _face_cascade, _plate_cascade, _road_model, _litter_model, _scene_model
         if _face_cascade is None:
             _face_cascade = cv2.CascadeClassifier(str(ROOT / "models" / "privacy" / "haarcascade_frontalface_default.xml"))
