@@ -9,7 +9,7 @@
 - `street_obstruction`: sandalye, masa, ürün yığını, kaldırım işgali alanı
 - `advertising_board`: reklam panosu, dükkân tabelası, afiş
 
-`occluded` ve `unknown` sınıfları, görünmeyen konteyner için zorunlu tahmin üretmemek amacıyla kullanılacak.
+`unknown` sınıfı, görünmeyen konteyner için zorunlu tahmin üretmemek amacıyla veri toplama aşamasında ayrı tutulacak. İlk model üç ana sınıfla başlayacak: boş, full (taşmamış ama boş olmayan) ve overflowing.
 
 ## Veri kuralı
 
