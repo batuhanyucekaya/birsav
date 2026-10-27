@@ -70,7 +70,11 @@ class Handler(SimpleHTTPRequestHandler):
         if _container_model is None:
             _container_model = YOLO(str(model_path))
         model = _container_model
-        result = model.predict(frame, conf=0.25, verbose=False)[0]
+        # Bu ilk demo modeli çok küçük bir veriyle eğitildiği için 0.25 eşiği
+        # bazı doğru adayları eliyordu. Demo görünürlüğü için daha düşük eşik
+        # ve daha yüksek çözünürlük kullanıyoruz; gerçek sürümde eşik doğrulama
+        # setine göre yeniden ayarlanmalıdır.
+        result = model.predict(frame, conf=0.08, imgsz=640, max_det=5, verbose=False)[0]
         detections = [{"class_name": result.names[int(c)], "confidence": float(p), "xyxy": [round(float(v), 2) for v in box]} for c, p, box in zip(result.boxes.cls.tolist(), result.boxes.conf.tolist(), result.boxes.xyxy.tolist())]
         annotated = result.plot()
         ok, encoded = cv2.imencode(".jpg", annotated)
