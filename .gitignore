@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.venv/
+data/raw/
+data/processed/
+data/outputs/
+*.mp4
+*.mov
+*.avi
+*.jpg
+*.jpeg
+*.png
+*.sqlite3
+*.db
+.env
+tmp/
+
