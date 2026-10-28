@@ -1,4 +1,4 @@
-path: C:/Users/batuh/OneDrive/Belgeler/ChatGPT/birsav/data/ceymo_small
+path: E:/birsav/data/ceymo_small
 train: images/train
 val: images/val
 nc: 11

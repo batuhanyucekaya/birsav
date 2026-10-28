@@ -1,0 +1,1446 @@
+{
+  "model": "C:\\Users\\batuh\\OneDrive\\Belgeler\\ChatGPT\\birsav\\runs\\segment\\runs\\segment\\runs\\mapillary_seg\\train_advertisement_fix\\weights\\best.pt",
+  "sha256": "aecaf4fe9b52050d7f6ee6801d0f796c4435a303709f80502a3cad6cc0726955",
+  "data": "C:\\Users\\batuh\\OneDrive\\Belgeler\\ChatGPT\\birsav\\data\\mapillary_seg_dedup_v1\\data.yaml",
+  "split": "val",
+  "purpose": "development_validation_not_field_test",
+  "imgsz": 320,
+  "torch": "2.14.1+cpu",
+  "task": "segment",
+  "images": 158,
+  "metrics": {
+    "metrics/precision(B)": 0.37292766920928067,
+    "metrics/recall(B)": 0.11064410020221976,
+    "metrics/mAP50(B)": 0.08759498300089535,
+    "metrics/mAP50-95(B)": 0.04255178788575302,
+    "metrics/precision(M)": 0.33671948772642096,
+    "metrics/recall(M)": 0.07948069488658509,
+    "metrics/mAP50(M)": 0.05672435265880437,
+    "metrics/mAP50-95(M)": 0.023703312666871198,
+    "fitness": 0.06625510055262422
+  },
+  "per_class": [
+    {
+      "Class": "road",
+      "Images": "157",
+      "Instances": "870",
+      "Box-P": 0.35559,
+      "Box-R": 0.25402,
+      "Box-F1": 0.29634,
+      "mAP50": 0.22591,
+      "mAP75": 0.10235,
+      "mAP50-95": 0.11404,
+      "Mask-P": 0.31184,
+      "Mask-R": 0.2046,
+      "Mask-F1": 0.24708
+    },
+    {
+      "Class": "sidewalk",
+      "Images": "121",
+      "Instances": "543",
+      "Box-P": 0.26357,
+      "Box-R": 0.0613,
+      "Box-F1": 0.09947,
+      "mAP50": 0.05852,
+      "mAP75": 0.02009,
+      "mAP50-95": 0.02357,
+      "Mask-P": 0.239,
+      "Mask-R": 0.04972,
+      "Mask-F1": 0.08232
+    },
+    {
+      "Class": "lane_marking",
+      "Images": "142",
+      "Instances": "756",
+      "Box-P": 0.30683,
+      "Box-R": 0.22074,
+      "Box-F1": 0.25676,
+      "mAP50": 0.17347,
+      "mAP75": 0.08037,
+      "mAP50-95": 0.08703,
+      "Mask-P": 0.16871,
+      "Mask-R": 0.11376,
+      "Mask-F1": 0.13589
+    },
+    {
+      "Class": "trash_can",
+      "Images": "26",
+      "Instances": "34",
+      "Box-P": 1.0,
+      "Box-R": 0.0,
+      "Box-F1": 0.0,
+      "mAP50": 0.0,
+      "mAP75": 0.0,
+      "mAP50-95": 0.0,
+      "Mask-P": 1.0,
+      "Mask-R": 0.0,
+      "Mask-F1": 0.0
+    },
+    {
+      "Class": "billboard",
+      "Images": "101",
+      "Instances": "379",
+      "Box-P": 0.11271,
+      "Box-R": 0.05013,
+      "Box-F1": 0.0694,
+      "mAP50": 0.02119,
+      "mAP75": 0.00495,
+      "mAP50-95": 0.00754,
+      "Mask-P": 0.09212,
+      "Mask-R": 0.03694,
+      "Mask-F1": 0.05273
+    },
+    {
+      "Class": "sign",
+      "Images": "155",
+      "Instances": "1141",
+      "Box-P": 0.19887,
+      "Box-R": 0.07767,
+      "Box-F1": 0.11171,
+      "mAP50": 0.04648,
+      "mAP75": 0.019,
+      "mAP50-95": 0.02314,
+      "Mask-P": 0.20866,
+      "Mask-R": 0.07187,
+      "Mask-F1": 0.10691
+    }
+  ],
+  "confusion_matrix": [
+    [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  ],
+  "per_image": {
+    "AGF-pCYFC20VtpYPSk4FZA.jpg": {
+      "precision": 0.023333333333333334,
+      "recall": 0.4117647058823529,
+      "f1": 0.04416403785488959,
+      "tp": 7,
+      "fp": 293,
+      "fn": 10
+    },
+    "kLVoXxQKyQETqYBL1LLZ7w.jpg": {
+      "precision": 0.04666666666666667,
+      "recall": 0.56,
+      "f1": 0.08615384615384616,
+      "tp": 14,
+      "fp": 286,
+      "fn": 11
+    },
+    "iOkYdg7TbdAu805iRcMyqQ.jpg": {
+      "precision": 0.043333333333333335,
+      "recall": 0.4642857142857143,
+      "f1": 0.07926829268292683,
+      "tp": 13,
+      "fp": 287,
+      "fn": 15
+    },
+    "01uhObTkhfdvAl7kDEMMZg.jpg": {
+      "precision": 0.023333333333333334,
+      "recall": 0.22580645161290322,
+      "f1": 0.04229607250755287,
+      "tp": 7,
+      "fp": 293,
+      "fn": 24
+    },
+    "5Wnh21pNvbBlUxJuCZIhTQ.jpg": {
+      "precision": 0.013333333333333334,
+      "recall": 0.5714285714285714,
+      "f1": 0.026058631921824105,
+      "tp": 4,
+      "fp": 296,
+      "fn": 3
+    },
+    "7dXcyg9oCu8A0mJ8-fqfqQ.jpg": {
+      "precision": 0.02,
+      "recall": 0.42857142857142855,
+      "f1": 0.038216560509554146,
+      "tp": 6,
+      "fp": 294,
+      "fn": 8
+    },
+    "4gFntUHznVsgo_gC3UOCNQ.jpg": {
+      "precision": 0.02,
+      "recall": 0.25,
+      "f1": 0.037037037037037035,
+      "tp": 6,
+      "fp": 294,
+      "fn": 18
+    },
+    "4neqy2dB9gn7d_LJVPdTAQ.jpg": {
+      "precision": 0.023333333333333334,
+      "recall": 0.7777777777777778,
+      "f1": 0.045307443365695796,
+      "tp": 7,
+      "fp": 293,
+      "fn": 2
+    },
+    "HRcrjFo2dA83jc4oDfD1Lg.jpg": {
+      "precision": 0.023333333333333334,
+      "recall": 0.35,
+      "f1": 0.04375,
+      "tp": 7,
+      "fp": 293,
+      "fn": 13
+    },
+    "GuWI4b6nmNgwnhZnKkYNBA.jpg": {
+      "precision": 0.02666666666666667,
+      "recall": 0.2222222222222222,
+      "f1": 0.047619047619047616,
+      "tp": 8,
+      "fp": 292,
+      "fn": 28
+    },
+    "TwSQTC9ZoayOY3HagUc2mw.jpg": {
+      "precision": 0.03666666666666667,
+      "recall": 0.3333333333333333,
+      "f1": 0.06606606606606606,
+      "tp": 11,
+      "fp": 289,
+      "fn": 22
+    },
+    "TmWaK-50ZP6-aLkcjNA8gA.jpg": {
+      "precision": 0.03333333333333333,
+      "recall": 0.2857142857142857,
+      "f1": 0.05970149253731343,
+      "tp": 10,
+      "fp": 290,
+      "fn": 25
+    },
+    "QTe3Q9_O3A140sfC7zXjcw.jpg": {
+      "precision": 0.02,
+      "recall": 0.6666666666666666,
+      "f1": 0.038834951456310676,
+      "tp": 6,
+      "fp": 294,
+      "fn": 3
+    },
+    "NMoCWraA4kbiYvIEUZrxMw.jpg": {
+      "precision": 0.03,
+      "recall": 0.18,
+      "f1": 0.05142857142857143,
+      "tp": 9,
+      "fp": 291,
+      "fn": 41
+    },
+    "3Vmx7rfvzDWpPrk0cagksw.jpg": {
+      "precision": 0.006666666666666667,
+      "recall": 0.16666666666666666,
+      "f1": 0.012820512820512822,
+      "tp": 2,
+      "fp": 298,
+      "fn": 10
+    },
+    "DS7hApcI92552F4R-DMHLA.jpg": {
+      "precision": 0.016666666666666666,
+      "recall": 0.5,
+      "f1": 0.03225806451612903,
+      "tp": 5,
+      "fp": 295,
+      "fn": 5
+    },
+    "R0r5IdD8AAluxZey8pjIxQ.jpg": {
+      "precision": 0.023333333333333334,
+      "recall": 0.1891891891891892,
+      "f1": 0.04154302670623145,
+      "tp": 7,
+      "fp": 293,
+      "fn": 30
+    },
+    "RnJbnQKJ_20nJwGKtQFqeg.jpg": {
+      "precision": 0.02,
+      "recall": 0.2727272727272727,
+      "f1": 0.03726708074534161,
+      "tp": 6,
+      "fp": 294,
+      "fn": 16
+    },
+    "WZRxku9EbAWLwOqu-AAHTA.jpg": {
+      "precision": 0.043333333333333335,
+      "recall": 0.24074074074074073,
+      "f1": 0.07344632768361582,
+      "tp": 13,
+      "fp": 287,
+      "fn": 41
+    },
+    "YlOf5MTSW6Jheyr0LRWtFw.jpg": {
+      "precision": 0.01,
+      "recall": 0.15,
+      "f1": 0.01875,
+      "tp": 3,
+      "fp": 297,
+      "fn": 17
+    },
+    "hhpmZJ1t4pCQNNW4qPAlng.jpg": {
+      "precision": 0.043333333333333335,
+      "recall": 0.38235294117647056,
+      "f1": 0.07784431137724551,
+      "tp": 13,
+      "fp": 287,
+      "fn": 21
+    },
+    "jb8xyx_eC-kaehv4_y0Uxg.jpg": {
+      "precision": 0.016666666666666666,
+      "recall": 0.3333333333333333,
+      "f1": 0.031746031746031744,
+      "tp": 5,
+      "fp": 295,
+      "fn": 10
+    },
+    "d_mBvf_WCdzRon2RzVpZcg.jpg": {
+      "precision": 0.006666666666666667,
+      "recall": 0.2222222222222222,
+      "f1": 0.012944983818770227,
+      "tp": 2,
+      "fp": 298,
+      "fn": 7
+    },
+    "efU7wBTSKZgUs_F1NjLtTQ.jpg": {
+      "precision": 0.023333333333333334,
+      "recall": 0.5833333333333334,
+      "f1": 0.04487179487179487,
+      "tp": 7,
+      "fp": 293,
+      "fn": 5
+    },
+    "yLgT7ODdY3-qFjhTwMct9A.jpg": {
+      "precision": 0.016666666666666666,
+      "recall": 0.20833333333333334,
+      "f1": 0.0308641975308642,
+      "tp": 5,
+      "fp": 295,
+      "fn": 19
+    },
+    "zWYtMsXjDXvTjSz0BIdXgw.jpg": {
+      "precision": 0.03,
+      "recall": 0.5,
+      "f1": 0.056603773584905655,
+      "tp": 9,
+      "fp": 291,
+      "fn": 9
+    },
+    "uTmVZeFlloErQG8i5eXElw.jpg": {
+      "precision": 0.016666666666666666,
+      "recall": 0.17857142857142858,
+      "f1": 0.03048780487804878,
+      "tp": 5,
+      "fp": 295,
+      "fn": 23
+    },
+    "Nb-EV2WueQPzZrN0NZ8P0A.jpg": {
+      "precision": 0.023333333333333334,
+      "recall": 0.4375,
+      "f1": 0.04430379746835443,
+      "tp": 7,
+      "fp": 293,
+      "fn": 9
+    },
+    "AFFErkDurHU76EV5ReQ81Q.jpg": {
+      "precision": 0.023333333333333334,
+      "recall": 0.5384615384615384,
+      "f1": 0.04472843450479234,
+      "tp": 7,
+      "fp": 293,
+      "fn": 6
+    },
+    "q5J36szkzo0AiX7HW18RMw.jpg": {
+      "precision": 0.03333333333333333,
+      "recall": 0.35714285714285715,
+      "f1": 0.06097560975609756,
+      "tp": 10,
+      "fp": 290,
+      "fn": 18
+    },
+    "Z_F2PlVg_paiYebwooXzxw.jpg": {
+      "precision": 0.016666666666666666,
+      "recall": 0.14285714285714285,
+      "f1": 0.029850746268656716,
+      "tp": 5,
+      "fp": 295,
+      "fn": 30
+    },
+    "1CHtM4yh7kdvmeMvb3io1g.jpg": {
+      "precision": 0.03,
+      "recall": 0.5,
+      "f1": 0.056603773584905655,
+      "tp": 9,
+      "fp": 291,
+      "fn": 9
+    },
+    "XwvQfiTzXSJHPHOf_ywCuQ.jpg": {
+      "precision": 0.03333333333333333,
+      "recall": 0.2857142857142857,
+      "f1": 0.05970149253731343,
+      "tp": 10,
+      "fp": 290,
+      "fn": 25
+    },
+    "7fA8aFnfhZ2tOh_nsk7e5A.jpg": {
+      "precision": 0.016666666666666666,
+      "recall": 0.18518518518518517,
+      "f1": 0.03058103975535168,
+      "tp": 5,
+      "fp": 295,
+      "fn": 22
+    },
+    "cTe8PHeqyhdl9pXz1ayjrg.jpg": {
+      "precision": 0.01,
+      "recall": 0.07894736842105263,
+      "f1": 0.01775147928994083,
+      "tp": 3,
+      "fp": 297,
+      "fn": 35
+    },
+    "wT178UNZ3bbG6mUBGWUpXg.jpg": {
+      "precision": 0.02666666666666667,
+      "recall": 0.32,
+      "f1": 0.04923076923076923,
+      "tp": 8,
+      "fp": 292,
+      "fn": 17
+    },
+    "J2JfFJ65KEhV1ep2ofMiDw.jpg": {
+      "precision": 0.013333333333333334,
+      "recall": 0.5714285714285714,
+      "f1": 0.026058631921824105,
+      "tp": 4,
+      "fp": 296,
+      "fn": 3
+    },
+    "otI-AZhJq0D3WsakagNWOw.jpg": {
+      "precision": 0.013333333333333334,
+      "recall": 0.26666666666666666,
+      "f1": 0.0253968253968254,
+      "tp": 4,
+      "fp": 296,
+      "fn": 11
+    },
+    "8HxVs9WmYGKX7Dnv7WiXGg.jpg": {
+      "precision": 0.04666666666666667,
+      "recall": 0.4375,
+      "f1": 0.08433734939759036,
+      "tp": 14,
+      "fp": 286,
+      "fn": 18
+    },
+    "EeTA5iKS-DVj9z2aFtcPOg.jpg": {
+      "precision": 0.02,
+      "recall": 0.21428571428571427,
+      "f1": 0.03658536585365854,
+      "tp": 6,
+      "fp": 294,
+      "fn": 22
+    },
+    "CkhdQIMsRksLAZ9tXl3UdA.jpg": {
+      "precision": 0.03,
+      "recall": 0.25,
+      "f1": 0.05357142857142856,
+      "tp": 9,
+      "fp": 291,
+      "fn": 27
+    },
+    "CuYDllg70Z1moLuaos_fFA.jpg": {
+      "precision": 0.02666666666666667,
+      "recall": 0.38095238095238093,
+      "f1": 0.04984423676012461,
+      "tp": 8,
+      "fp": 292,
+      "fn": 13
+    },
+    "Cufvgz3uglyw9nB2TsIe1g.jpg": {
+      "precision": 0.016666666666666666,
+      "recall": 0.2777777777777778,
+      "f1": 0.031446540880503145,
+      "tp": 5,
+      "fp": 295,
+      "fn": 13
+    },
+    "A9xKI2sKmedtI_dUa-2PvQ.jpg": {
+      "precision": 0.013333333333333334,
+      "recall": 0.3333333333333333,
+      "f1": 0.025641025641025644,
+      "tp": 4,
+      "fp": 296,
+      "fn": 8
+    },
+    "CN5cbvFZ_C6SP5MBCWE7xg.jpg": {
+      "precision": 0.013333333333333334,
+      "recall": 1.0,
+      "f1": 0.02631578947368421,
+      "tp": 4,
+      "fp": 296,
+      "fn": 0
+    },
+    "A7-bhoc1Bw6W42GqcAaNTA.jpg": {
+      "precision": 0.023333333333333334,
+      "recall": 0.3181818181818182,
+      "f1": 0.04347826086956522,
+      "tp": 7,
+      "fp": 293,
+      "fn": 15
+    },
+    "BYcrLy8Dd1YRaz7zA5IDoA.jpg": {
+      "precision": 0.02,
+      "recall": 0.375,
+      "f1": 0.03797468354430379,
+      "tp": 6,
+      "fp": 294,
+      "fn": 10
+    },
+    "BOa-7XtXJkXt77E6o4Z9BA.jpg": {
+      "precision": 0.03,
+      "recall": 0.2903225806451613,
+      "f1": 0.05438066465256798,
+      "tp": 9,
+      "fp": 291,
+      "fn": 22
+    },
+    "7RPLmig-L2_vJ2CP8iBYHQ.jpg": {
+      "precision": 0.02666666666666667,
+      "recall": 0.47058823529411764,
+      "f1": 0.05047318611987382,
+      "tp": 8,
+      "fp": 292,
+      "fn": 9
+    },
+    "50qMQH36R2jlV86Ly6NCqQ.jpg": {
+      "precision": 0.023333333333333334,
+      "recall": 0.6363636363636364,
+      "f1": 0.04501607717041801,
+      "tp": 7,
+      "fp": 293,
+      "fn": 4
+    },
+    "4C9b-DvmF66Z2qcwvTOESQ.jpg": {
+      "precision": 0.02,
+      "recall": 0.13333333333333333,
+      "f1": 0.034782608695652174,
+      "tp": 6,
+      "fp": 294,
+      "fn": 39
+    },
+    "4_m7ze1URMmMzKRtJCC6jQ.jpg": {
+      "precision": 0.023333333333333334,
+      "recall": 0.3181818181818182,
+      "f1": 0.04347826086956522,
+      "tp": 7,
+      "fp": 293,
+      "fn": 15
+    },
+    "2zTSOh3bH634bkJrM9JY8A.jpg": {
+      "precision": 0.02,
+      "recall": 0.6666666666666666,
+      "f1": 0.038834951456310676,
+      "tp": 6,
+      "fp": 294,
+      "fn": 3
+    },
+    "5Z13SjW6v3EzFhoVP7XWmg.jpg": {
+      "precision": 0.016666666666666666,
+      "recall": 0.2777777777777778,
+      "f1": 0.031446540880503145,
+      "tp": 5,
+      "fp": 295,
+      "fn": 13
+    },
+    "5okbNM3DFIDYlG6gs_VKAg.jpg": {
+      "precision": 0.023333333333333334,
+      "recall": 0.7777777777777778,
+      "f1": 0.045307443365695796,
+      "tp": 7,
+      "fp": 293,
+      "fn": 2
+    },
+    "6-J9R7VrWRYdKWqBM0Grlw.jpg": {
+      "precision": 0.01,
+      "recall": 0.17647058823529413,
+      "f1": 0.01892744479495268,
+      "tp": 3,
+      "fp": 297,
+      "fn": 14
+    },
+    "9zReHTPZvcWK5lrvHF_oeQ.jpg": {
+      "precision": 0.013333333333333334,
+      "recall": 0.36363636363636365,
+      "f1": 0.025723472668810296,
+      "tp": 4,
+      "fp": 296,
+      "fn": 7
+    },
+    "6guh2PolrwaHDZjWIebpYA.jpg": {
+      "precision": 0.02666666666666667,
+      "recall": 0.2,
+      "f1": 0.047058823529411764,
+      "tp": 8,
+      "fp": 292,
+      "fn": 32
+    },
+    "6H19o6qjbgSH6L4Vbi5naA.jpg": {
+      "precision": 0.03333333333333333,
+      "recall": 0.4166666666666667,
+      "f1": 0.0617283950617284,
+      "tp": 10,
+      "fp": 290,
+      "fn": 14
+    },
+    "DUFHo3dSQFvuAS55cefywA.jpg": {
+      "precision": 0.02666666666666667,
+      "recall": 0.3333333333333333,
+      "f1": 0.04938271604938272,
+      "tp": 8,
+      "fp": 292,
+      "fn": 16
+    },
+    "DcVToSwaVrzl8kww5Lt6FA.jpg": {
+      "precision": 0.016666666666666666,
+      "recall": 0.5,
+      "f1": 0.03225806451612903,
+      "tp": 5,
+      "fp": 295,
+      "fn": 5
+    },
+    "AjywTMcMIF-X6J6oUmm6pQ.jpg": {
+      "precision": 0.03,
+      "recall": 0.3103448275862069,
+      "f1": 0.0547112462006079,
+      "tp": 9,
+      "fp": 291,
+      "fn": 20
+    },
+    "1PCSzeSXeXu8Fmr_oAJqMw.jpg": {
+      "precision": 0.03,
+      "recall": 0.6428571428571429,
+      "f1": 0.05732484076433121,
+      "tp": 9,
+      "fp": 291,
+      "fn": 5
+    },
+    "2Ta0ee4vnYRJPoH3Uw5vFQ.jpg": {
+      "precision": 0.023333333333333334,
+      "recall": 0.6363636363636364,
+      "f1": 0.04501607717041801,
+      "tp": 7,
+      "fp": 293,
+      "fn": 4
+    },
+    "_2g1p_iHAUNc2KTgESz5KA.jpg": {
+      "precision": 0.016666666666666666,
+      "recall": 0.4166666666666667,
+      "f1": 0.032051282051282055,
+      "tp": 5,
+      "fp": 295,
+      "fn": 7
+    },
+    "YtG-3yr4bJb8fT7ZncJHYA.jpg": {
+      "precision": 0.013333333333333334,
+      "recall": 0.3333333333333333,
+      "f1": 0.025641025641025644,
+      "tp": 4,
+      "fp": 296,
+      "fn": 8
+    },
+    "LRJCzoKvUMsC7uewabIQqg.jpg": {
+      "precision": 0.02666666666666667,
+      "recall": 0.4,
+      "f1": 0.05,
+      "tp": 8,
+      "fp": 292,
+      "fn": 12
+    },
+    "LwiVZdduPLyBYqf_3XIyGA.jpg": {
+      "precision": 0.023333333333333334,
+      "recall": 0.5833333333333334,
+      "f1": 0.04487179487179487,
+      "tp": 7,
+      "fp": 293,
+      "fn": 5
+    },
+    "KG1un2fSIJkp7zExvol-gg.jpg": {
+      "precision": 0.016666666666666666,
+      "recall": 0.1724137931034483,
+      "f1": 0.0303951367781155,
+      "tp": 5,
+      "fp": 295,
+      "fn": 24
+    },
+    "J_T-6kQhJuGaDCGP8IZolQ.jpg": {
+      "precision": 0.03333333333333333,
+      "recall": 0.35714285714285715,
+      "f1": 0.06097560975609756,
+      "tp": 10,
+      "fp": 290,
+      "fn": 18
+    },
+    "ILL-Z_Sl9Q8hzwTB7n8wUw.jpg": {
+      "precision": 0.05333333333333334,
+      "recall": 0.37209302325581395,
+      "f1": 0.09329446064139942,
+      "tp": 16,
+      "fp": 284,
+      "fn": 27
+    },
+    "LqlPsDLGq2zRVTcncrtEZg.jpg": {
+      "precision": 0.023333333333333334,
+      "recall": 0.35,
+      "f1": 0.04375,
+      "tp": 7,
+      "fp": 293,
+      "fn": 13
+    },
+    "F6f36gLN6q9C_89Z1FiUnA.jpg": {
+      "precision": 0.03,
+      "recall": 0.20930232558139536,
+      "f1": 0.052478134110787174,
+      "tp": 9,
+      "fp": 291,
+      "fn": 34
+    },
+    "ILDq33iDEMCcz6pmcdiilw.jpg": {
+      "precision": 0.043333333333333335,
+      "recall": 0.4482758620689655,
+      "f1": 0.0790273556231003,
+      "tp": 13,
+      "fp": 287,
+      "fn": 16
+    },
+    "G5oVhgsSAPU7CEBW6YfvMA.jpg": {
+      "precision": 0.02666666666666667,
+      "recall": 0.34782608695652173,
+      "f1": 0.049535603715170275,
+      "tp": 8,
+      "fp": 292,
+      "fn": 15
+    },
+    "Hta7UREvybjJa1Xo-r-Q_g.jpg": {
+      "precision": 0.043333333333333335,
+      "recall": 0.30952380952380953,
+      "f1": 0.0760233918128655,
+      "tp": 13,
+      "fp": 287,
+      "fn": 29
+    },
+    "EmtUyEo_Z7B8_C8PaiZ5Qw.jpg": {
+      "precision": 0.02,
+      "recall": 0.2727272727272727,
+      "f1": 0.03726708074534161,
+      "tp": 6,
+      "fp": 294,
+      "fn": 16
+    },
+    "E9YV4mZLk7a1AcZkorl1Dg.jpg": {
+      "precision": 0.02666666666666667,
+      "recall": 0.5714285714285714,
+      "f1": 0.05095541401273886,
+      "tp": 8,
+      "fp": 292,
+      "fn": 6
+    },
+    "EBy44p_dvriusEAf32Y5fg.jpg": {
+      "precision": 0.016666666666666666,
+      "recall": 0.45454545454545453,
+      "f1": 0.03215434083601286,
+      "tp": 5,
+      "fp": 295,
+      "fn": 6
+    },
+    "LPkrpggZCdfE20r14amScw.jpg": {
+      "precision": 0.016666666666666666,
+      "recall": 0.25,
+      "f1": 0.03125,
+      "tp": 5,
+      "fp": 295,
+      "fn": 15
+    },
+    "CIQNsVCS8-eZs8zqzNXwWQ.jpg": {
+      "precision": 0.04,
+      "recall": 0.5454545454545454,
+      "f1": 0.07453416149068322,
+      "tp": 12,
+      "fp": 288,
+      "fn": 10
+    },
+    "CUFulVNJePu89iZ_dcyHZw.jpg": {
+      "precision": 0.016666666666666666,
+      "recall": 0.29411764705882354,
+      "f1": 0.031545741324921134,
+      "tp": 5,
+      "fp": 295,
+      "fn": 12
+    },
+    "CO3iYjcbYx8AZiS3JzuAuQ.jpg": {
+      "precision": 0.03,
+      "recall": 0.2647058823529412,
+      "f1": 0.05389221556886228,
+      "tp": 9,
+      "fp": 291,
+      "fn": 25
+    },
+    "RFpj-DzXWTQTChIxcW326w.jpg": {
+      "precision": 0.023333333333333334,
+      "recall": 0.3684210526315789,
+      "f1": 0.0438871473354232,
+      "tp": 7,
+      "fp": 293,
+      "fn": 12
+    },
+    "VK2_pQlKp3LHI_9cPMfkUw.jpg": {
+      "precision": 0.02666666666666667,
+      "recall": 0.42105263157894735,
+      "f1": 0.05015673981191223,
+      "tp": 8,
+      "fp": 292,
+      "fn": 11
+    },
+    "VHssr7Wjm5HUQHcad39P0w.jpg": {
+      "precision": 0.03333333333333333,
+      "recall": 0.37037037037037035,
+      "f1": 0.06116207951070336,
+      "tp": 10,
+      "fp": 290,
+      "fn": 17
+    },
+    "UP1NT4vZ4C7bV2CNY-XqTQ.jpg": {
+      "precision": 0.03666666666666667,
+      "recall": 0.23404255319148937,
+      "f1": 0.06340057636887607,
+      "tp": 11,
+      "fp": 289,
+      "fn": 36
+    },
+    "V9W5ZXUJE6GqHsfEN6A3LA.jpg": {
+      "precision": 0.03,
+      "recall": 0.6,
+      "f1": 0.05714285714285714,
+      "tp": 9,
+      "fp": 291,
+      "fn": 6
+    },
+    "U-vZYAmhExKc2mBKNyT5bA.jpg": {
+      "precision": 0.02,
+      "recall": 0.20689655172413793,
+      "f1": 0.03647416413373861,
+      "tp": 6,
+      "fp": 294,
+      "fn": 23
+    },
+    "SIWjcooTdWe0HLdl4Eia_Q.jpg": {
+      "precision": 0.03333333333333333,
+      "recall": 0.625,
+      "f1": 0.06329113924050632,
+      "tp": 10,
+      "fp": 290,
+      "fn": 6
+    },
+    "Qlp5AEY-zfWYhd1OB5CIpQ.jpg": {
+      "precision": 0.04,
+      "recall": 0.3,
+      "f1": 0.07058823529411766,
+      "tp": 12,
+      "fp": 288,
+      "fn": 28
+    },
+    "MVuC7PtCKnOzEEKwNWFj5g.jpg": {
+      "precision": 0.016666666666666666,
+      "recall": 0.625,
+      "f1": 0.032467532467532464,
+      "tp": 5,
+      "fp": 295,
+      "fn": 3
+    },
+    "P3NZK64WRNPyOCrQGAuZug.jpg": {
+      "precision": 0.023333333333333334,
+      "recall": 0.6363636363636364,
+      "f1": 0.04501607717041801,
+      "tp": 7,
+      "fp": 293,
+      "fn": 4
+    },
+    "Om6vUCEXcsrZS_AldhCuRw.jpg": {
+      "precision": 0.04,
+      "recall": 0.3870967741935484,
+      "f1": 0.07250755287009064,
+      "tp": 12,
+      "fp": 288,
+      "fn": 19
+    },
+    "ORksNklaLJEU6JnggPAxHA.jpg": {
+      "precision": 0.043333333333333335,
+      "recall": 0.5652173913043478,
+      "f1": 0.08049535603715172,
+      "tp": 13,
+      "fp": 287,
+      "fn": 10
+    },
+    "N1334pS6tPFWAKSIgJTHkw.jpg": {
+      "precision": 0.03333333333333333,
+      "recall": 0.2777777777777778,
+      "f1": 0.05952380952380952,
+      "tp": 10,
+      "fp": 290,
+      "fn": 26
+    },
+    "hNfeJ3_cb7_t6O_uef0jlQ.jpg": {
+      "precision": 0.023333333333333334,
+      "recall": 0.25925925925925924,
+      "f1": 0.04281345565749236,
+      "tp": 7,
+      "fp": 293,
+      "fn": 20
+    },
+    "grlK7vx0RgkPXB2Zvmk8qA.jpg": {
+      "precision": 0.0033333333333333335,
+      "recall": 0.2,
+      "f1": 0.006557377049180329,
+      "tp": 1,
+      "fp": 299,
+      "fn": 4
+    },
+    "YsQ2IGhqCSURQAcf6FmfiA.jpg": {
+      "precision": 0.023333333333333334,
+      "recall": 0.5,
+      "f1": 0.0445859872611465,
+      "tp": 7,
+      "fp": 293,
+      "fn": 7
+    },
+    "YnkT-JN5qmKBkf6rbKYIAA.jpg": {
+      "precision": 0.03,
+      "recall": 0.20454545454545456,
+      "f1": 0.05232558139534884,
+      "tp": 9,
+      "fp": 291,
+      "fn": 35
+    },
+    "Yd_-PfnfU-WZddBB-losTA.jpg": {
+      "precision": 0.016666666666666666,
+      "recall": 0.22727272727272727,
+      "f1": 0.031055900621118012,
+      "tp": 5,
+      "fp": 295,
+      "fn": 17
+    },
+    "YeUypVQbBxtktUU3Sjy2KQ.jpg": {
+      "precision": 0.01,
+      "recall": 0.1875,
+      "f1": 0.018987341772151896,
+      "tp": 3,
+      "fp": 297,
+      "fn": 13
+    },
+    "WX7pzkLkeny32OZJEJmHcA.jpg": {
+      "precision": 0.02666666666666667,
+      "recall": 0.3076923076923077,
+      "f1": 0.049079754601227,
+      "tp": 8,
+      "fp": 292,
+      "fn": 18
+    },
+    "Wf3NK9kfgGKyklrE6BmCTw.jpg": {
+      "precision": 0.023333333333333334,
+      "recall": 0.21875,
+      "f1": 0.04216867469879518,
+      "tp": 7,
+      "fp": 293,
+      "fn": 25
+    },
+    "eEJzMQv1rbt9WyiPpJrXtg.jpg": {
+      "precision": 0.016666666666666666,
+      "recall": 0.25,
+      "f1": 0.03125,
+      "tp": 5,
+      "fp": 295,
+      "fn": 15
+    },
+    "ecT4B8cmA2E0PwIqMS8Q6Q.jpg": {
+      "precision": 0.02666666666666667,
+      "recall": 0.13333333333333333,
+      "f1": 0.044444444444444446,
+      "tp": 8,
+      "fp": 292,
+      "fn": 52
+    },
+    "ek0g9RPg94Xu1ctWTKXUzg.jpg": {
+      "precision": 0.013333333333333334,
+      "recall": 0.19047619047619047,
+      "f1": 0.024922118380062305,
+      "tp": 4,
+      "fp": 296,
+      "fn": 17
+    },
+    "aMHjBQy2Bh_6jMT1hENe6g.jpg": {
+      "precision": 0.05,
+      "recall": 0.29411764705882354,
+      "f1": 0.08547008547008549,
+      "tp": 15,
+      "fp": 285,
+      "fn": 36
+    },
+    "aVUme2kp5ZjSEUeLkXTE_g.jpg": {
+      "precision": 0.04666666666666667,
+      "recall": 0.56,
+      "f1": 0.08615384615384616,
+      "tp": 14,
+      "fp": 286,
+      "fn": 11
+    },
+    "d9KSO6v1nf1D1jNvr1J2gg.jpg": {
+      "precision": 0.013333333333333334,
+      "recall": 0.8,
+      "f1": 0.026229508196721315,
+      "tp": 4,
+      "fp": 296,
+      "fn": 1
+    },
+    "dp3oXo-LD7GBlDI-JOPgTA.jpg": {
+      "precision": 0.03666666666666667,
+      "recall": 0.34375,
+      "f1": 0.06626506024096385,
+      "tp": 11,
+      "fp": 289,
+      "fn": 21
+    },
+    "_EHSByYaCC6h8dXapDWFFA.jpg": {
+      "precision": 0.016666666666666666,
+      "recall": 0.38461538461538464,
+      "f1": 0.03194888178913738,
+      "tp": 5,
+      "fp": 295,
+      "fn": 8
+    },
+    "otMaIK2QLX4CmYTARRR62Q.jpg": {
+      "precision": 0.03333333333333333,
+      "recall": 0.25,
+      "f1": 0.058823529411764705,
+      "tp": 10,
+      "fp": 290,
+      "fn": 30
+    },
+    "koW7yYUH3A_xLUi6_1CZsw.jpg": {
+      "precision": 0.04,
+      "recall": 0.42857142857142855,
+      "f1": 0.07317073170731708,
+      "tp": 12,
+      "fp": 288,
+      "fn": 16
+    },
+    "gZ0Naqp80qFhioIdNS-o8g.jpg": {
+      "precision": 0.006666666666666667,
+      "recall": 0.18181818181818182,
+      "f1": 0.012861736334405148,
+      "tp": 2,
+      "fp": 298,
+      "fn": 9
+    },
+    "g2s8QD2WBmvcMPoG5b3cfw.jpg": {
+      "precision": 0.02666666666666667,
+      "recall": 0.2962962962962963,
+      "f1": 0.04892966360856269,
+      "tp": 8,
+      "fp": 292,
+      "fn": 19
+    },
+    "fc6mmnwy-ZNW0K9hoNhu_Q.jpg": {
+      "precision": 0.02,
+      "recall": 0.21428571428571427,
+      "f1": 0.03658536585365854,
+      "tp": 6,
+      "fp": 294,
+      "fn": 22
+    },
+    "iLYwJe-SPw6rn10qL2qarA.jpg": {
+      "precision": 0.02666666666666667,
+      "recall": 0.36363636363636365,
+      "f1": 0.04968944099378882,
+      "tp": 8,
+      "fp": 292,
+      "fn": 14
+    },
+    "kDDPLR_UF_nMv3sNjK4vXQ.jpg": {
+      "precision": 0.02666666666666667,
+      "recall": 0.42105263157894735,
+      "f1": 0.05015673981191223,
+      "tp": 8,
+      "fp": 292,
+      "fn": 11
+    },
+    "hZ65GW2Vy6Wl16L1zSX1jg.jpg": {
+      "precision": 0.023333333333333334,
+      "recall": 0.7,
+      "f1": 0.04516129032258064,
+      "tp": 7,
+      "fp": 293,
+      "fn": 3
+    },
+    "pLUK-NU7IFJXkgKtK4Rd6A.jpg": {
+      "precision": 0.02666666666666667,
+      "recall": 0.5333333333333333,
+      "f1": 0.0507936507936508,
+      "tp": 8,
+      "fp": 292,
+      "fn": 7
+    },
+    "pD_xjMTTH-g3vR1a-M_NJg.jpg": {
+      "precision": 0.03333333333333333,
+      "recall": 0.35714285714285715,
+      "f1": 0.06097560975609756,
+      "tp": 10,
+      "fp": 290,
+      "fn": 18
+    },
+    "ld3zVf41jV1Zps37bRs04A.jpg": {
+      "precision": 0.02,
+      "recall": 0.2727272727272727,
+      "f1": 0.03726708074534161,
+      "tp": 6,
+      "fp": 294,
+      "fn": 16
+    },
+    "69PE9DtgtsF_5fcs8EOyfA.jpg": {
+      "precision": 0.016666666666666666,
+      "recall": 0.5,
+      "f1": 0.03225806451612903,
+      "tp": 5,
+      "fp": 295,
+      "fn": 5
+    },
+    "2ylSjakDEowZNJz93wmt9w.jpg": {
+      "precision": 0.02666666666666667,
+      "recall": 0.5,
+      "f1": 0.05063291139240507,
+      "tp": 8,
+      "fp": 292,
+      "fn": 8
+    },
+    "1Kizhrwj3o9Llk99KorieA.jpg": {
+      "precision": 0.02666666666666667,
+      "recall": 0.3076923076923077,
+      "f1": 0.049079754601227,
+      "tp": 8,
+      "fp": 292,
+      "fn": 18
+    },
+    "-AUC1oIt8HUa9TmU4bd0Dg.jpg": {
+      "precision": 0.0033333333333333335,
+      "recall": 0.3333333333333333,
+      "f1": 0.006600660066006601,
+      "tp": 1,
+      "fp": 299,
+      "fn": 2
+    },
+    "14hZnBAYdwjP78yJQ0trTw.jpg": {
+      "precision": 0.05,
+      "recall": 0.6,
+      "f1": 0.0923076923076923,
+      "tp": 15,
+      "fp": 285,
+      "fn": 10
+    },
+    "vxylff6QpX9cLQwCN7LroQ.jpg": {
+      "precision": 0.02,
+      "recall": 0.35294117647058826,
+      "f1": 0.03785488958990536,
+      "tp": 6,
+      "fp": 294,
+      "fn": 11
+    },
+    "uU2bUlt4rMBsWf4tNsjbiA.jpg": {
+      "precision": 0.023333333333333334,
+      "recall": 0.4375,
+      "f1": 0.04430379746835443,
+      "tp": 7,
+      "fp": 293,
+      "fn": 9
+    },
+    "uGX0Z2sN24fNXm3ERtFT8A.jpg": {
+      "precision": 0.006666666666666667,
+      "recall": 0.6666666666666666,
+      "f1": 0.013201320132013201,
+      "tp": 2,
+      "fp": 298,
+      "fn": 1
+    },
+    "pOu3q6sjynjQs1V3d7XKTg.jpg": {
+      "precision": 0.04666666666666667,
+      "recall": 0.34146341463414637,
+      "f1": 0.08211143695014662,
+      "tp": 14,
+      "fp": 286,
+      "fn": 27
+    },
+    "lnTb1Draf_IHWcpn40tP8g.jpg": {
+      "precision": 0.043333333333333335,
+      "recall": 0.7222222222222222,
+      "f1": 0.08176100628930817,
+      "tp": 13,
+      "fp": 287,
+      "fn": 5
+    },
+    "qtcg6OMaJWH7IqT2C64BuA.jpg": {
+      "precision": 0.01,
+      "recall": 0.3,
+      "f1": 0.01935483870967742,
+      "tp": 3,
+      "fp": 297,
+      "fn": 7
+    },
+    "qHoYKxe4QeUpMmtE_SYA5w.jpg": {
+      "precision": 0.016666666666666666,
+      "recall": 0.1388888888888889,
+      "f1": 0.02976190476190476,
+      "tp": 5,
+      "fp": 295,
+      "fn": 31
+    },
+    "phPUz52K2nfH6Hb3IUk2KQ.jpg": {
+      "precision": 0.06,
+      "recall": 0.27692307692307694,
+      "f1": 0.09863013698630137,
+      "tp": 18,
+      "fp": 282,
+      "fn": 47
+    },
+    "t1qY_W9WDqSakh0yIV-ScQ.jpg": {
+      "precision": 0.016666666666666666,
+      "recall": 0.29411764705882354,
+      "f1": 0.031545741324921134,
+      "tp": 5,
+      "fp": 295,
+      "fn": 12
+    },
+    "t7C0J_Az0YgIy1DmoFCu-w.jpg": {
+      "precision": 0.01,
+      "recall": 0.1,
+      "f1": 0.01818181818181818,
+      "tp": 3,
+      "fp": 297,
+      "fn": 27
+    },
+    "thuCq_sSxE_BqWO31e3pUA.jpg": {
+      "precision": 0.03333333333333333,
+      "recall": 0.2702702702702703,
+      "f1": 0.05934718100890207,
+      "tp": 10,
+      "fp": 290,
+      "fn": 27
+    },
+    "tCNulcjw4EJk0oRIRVZIKw.jpg": {
+      "precision": 0.04,
+      "recall": 0.24,
+      "f1": 0.06857142857142857,
+      "tp": 12,
+      "fp": 288,
+      "fn": 38
+    },
+    "tjzTB1JxUGIqkSnM81R_hw.jpg": {
+      "precision": 0.023333333333333334,
+      "recall": 0.1076923076923077,
+      "f1": 0.03835616438356164,
+      "tp": 7,
+      "fp": 293,
+      "fn": 58
+    },
+    "rhZ1SgesaQN4S9ZcsqqtEw.jpg": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "tp": 0,
+      "fp": 300,
+      "fn": 3
+    },
+    "sZFF94hpnNVmmvIWJjGsaQ.jpg": {
+      "precision": 0.02666666666666667,
+      "recall": 0.3076923076923077,
+      "f1": 0.049079754601227,
+      "tp": 8,
+      "fp": 292,
+      "fn": 18
+    },
+    "qLlc1iJuOazbCpQH0ct9EA.jpg": {
+      "precision": 0.0033333333333333335,
+      "recall": 0.2,
+      "f1": 0.006557377049180329,
+      "tp": 1,
+      "fp": 299,
+      "fn": 4
+    },
+    "zHL5Jt_t0skEeRWetczJ_A.jpg": {
+      "precision": 0.023333333333333334,
+      "recall": 0.1590909090909091,
+      "f1": 0.04069767441860465,
+      "tp": 7,
+      "fp": 293,
+      "fn": 37
+    },
+    "zRqDVKFNznCFbemrZlcb4A.jpg": {
+      "precision": 0.043333333333333335,
+      "recall": 0.52,
+      "f1": 0.08,
+      "tp": 13,
+      "fp": 287,
+      "fn": 12
+    },
+    "zhEv_YpMIVM5CcW5ygdKdg.jpg": {
+      "precision": 0.013333333333333334,
+      "recall": 0.25,
+      "f1": 0.025316455696202535,
+      "tp": 4,
+      "fp": 296,
+      "fn": 12
+    },
+    "xFnkjqdswOYIOH0wTYoG1w.jpg": {
+      "precision": 0.03,
+      "recall": 0.5294117647058824,
+      "f1": 0.05678233438485804,
+      "tp": 9,
+      "fp": 291,
+      "fn": 8
+    },
+    "xg7dJNxF41ISoq-Su7G3Dg.jpg": {
+      "precision": 0.023333333333333334,
+      "recall": 0.5833333333333334,
+      "f1": 0.04487179487179487,
+      "tp": 7,
+      "fp": 293,
+      "fn": 5
+    },
+    "yGbaMgcIFUhAttpGGwp2-w.jpg": {
+      "precision": 0.03,
+      "recall": 0.47368421052631576,
+      "f1": 0.05642633228840126,
+      "tp": 9,
+      "fp": 291,
+      "fn": 10
+    },
+    "yXezEg1MGouB3argcXJe6Q.jpg": {
+      "precision": 0.016666666666666666,
+      "recall": 0.8333333333333334,
+      "f1": 0.032679738562091505,
+      "tp": 5,
+      "fp": 295,
+      "fn": 1
+    },
+    "wyJFkZML1rGcSSX6Z1kcAA.jpg": {
+      "precision": 0.03,
+      "recall": 0.5,
+      "f1": 0.056603773584905655,
+      "tp": 9,
+      "fp": 291,
+      "fn": 9
+    },
+    "zpOQfvo3deAc_qQK7yssjw.jpg": {
+      "precision": 0.02666666666666667,
+      "recall": 0.2962962962962963,
+      "f1": 0.04892966360856269,
+      "tp": 8,
+      "fp": 292,
+      "fn": 19
+    },
+    "zqJHC0TFDcMmzmk0JRHjaQ.jpg": {
+      "precision": 0.04,
+      "recall": 0.3076923076923077,
+      "f1": 0.07079646017699116,
+      "tp": 12,
+      "fp": 288,
+      "fn": 27
+    },
+    "zjoqdnvHxlJJRRNUckVuhg.jpg": {
+      "precision": 0.04,
+      "recall": 0.4,
+      "f1": 0.07272727272727272,
+      "tp": 12,
+      "fp": 288,
+      "fn": 18
+    },
+    "GfTB9-GdayXBP9LCVoYNCQ.jpg": {
+      "precision": 0.023333333333333334,
+      "recall": 0.21212121212121213,
+      "f1": 0.042042042042042045,
+      "tp": 7,
+      "fp": 293,
+      "fn": 26
+    },
+    "ilJcTbDBeEJKqsLLSbMPOw.jpg": {
+      "precision": 0.04,
+      "recall": 0.32432432432432434,
+      "f1": 0.0712166172106825,
+      "tp": 12,
+      "fp": 288,
+      "fn": 25
+    },
+    "50wFrzYFHPLEayIFOB41uw.jpg": {
+      "precision": 0.016666666666666666,
+      "recall": 0.21739130434782608,
+      "f1": 0.030959752321981424,
+      "tp": 5,
+      "fp": 295,
+      "fn": 18
+    }
+  },
+  "speed_ms_per_image": {
+    "preprocess": 0.5504860747362416,
+    "inference": 36.32971329076284,
+    "loss": 0.0014639240534846448,
+    "postprocess": 8.864229747803021
+  },
+  "elapsed_seconds": 29.827967599994736
+}

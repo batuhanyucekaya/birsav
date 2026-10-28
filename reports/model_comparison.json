@@ -1,0 +1,57 @@
+{
+  "purpose": "same_development_validation_protocol_NOT_field_test",
+  "same_fingerprint": true,
+  "images": 158,
+  "imgsz": 320,
+  "metrics": {
+    "metrics/precision(B)": {
+      "before": 0.37292766920928067,
+      "after": 0.3942755600709748,
+      "delta": 0.02134789086169414
+    },
+    "metrics/recall(B)": {
+      "before": 0.11064410020221976,
+      "after": 0.12341443384846006,
+      "delta": 0.012770333646240292
+    },
+    "metrics/mAP50(B)": {
+      "before": 0.08759498300089535,
+      "after": 0.09439388143312376,
+      "delta": 0.0067988984322284035
+    },
+    "metrics/mAP50-95(B)": {
+      "before": 0.04255178788575302,
+      "after": 0.04827465377485199,
+      "delta": 0.005722865889098969
+    },
+    "metrics/precision(M)": {
+      "before": 0.33671948772642096,
+      "after": 0.3543240353129771,
+      "delta": 0.017604547586556163
+    },
+    "metrics/recall(M)": {
+      "before": 0.07948069488658509,
+      "after": 0.089236822770782,
+      "delta": 0.009756127884196913
+    },
+    "metrics/mAP50(M)": {
+      "before": 0.05672435265880437,
+      "after": 0.06444154468351165,
+      "delta": 0.0077171920247072825
+    },
+    "metrics/mAP50-95(M)": {
+      "before": 0.023703312666871198,
+      "after": 0.02820983622380684,
+      "delta": 0.004506523556935642
+    },
+    "fitness": {
+      "before": 0.06625510055262422,
+      "after": 0.07648448999865883,
+      "delta": 0.010229389446034604
+    }
+  },
+  "promotion": {
+    "promote": false,
+    "reason": "Independent test provenance is missing"
+  }
+}

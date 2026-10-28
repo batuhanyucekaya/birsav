@@ -1,5 +1,11 @@
-path: C:/Users/batuh/OneDrive/Belgeler/ChatGPT/birsav/data/mapillary_seg
+path: E:/birsav/data/mapillary_seg
 train: images/train
 val: images/val
 nc: 6
-names: ['road', 'sidewalk', 'lane_marking', 'trash_can', 'billboard', 'sign']
+names:
+- road
+- sidewalk
+- lane_marking
+- trash_can
+- billboard
+- sign

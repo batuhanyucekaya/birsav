@@ -8,7 +8,6 @@ import shutil
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-
 CLASSES = {"D00": 0, "D10": 1, "D20": 2, "D40": 3}
 
 
@@ -18,6 +17,10 @@ def split_for(name: str, validation_ratio: float) -> str:
 
 
 def convert(source: Path, output: Path, validation_ratio: float) -> tuple[int, int]:
+    if not 0 <= validation_ratio < 1:
+        raise ValueError("validation_ratio 0..1 aralığında olmalı")
+    if output.exists() and any(output.iterdir()):
+        raise ValueError("Çıktı klasörü dolu; yeni bir veri sürümü seçin")
     xml_files = sorted(source.rglob("*.xml"))
     if not xml_files:
         raise FileNotFoundError(f"XML anotasyonu bulunamadı: {source}")
@@ -46,22 +49,36 @@ def convert(source: Path, output: Path, validation_ratio: float) -> tuple[int, i
             box = item.find("bndbox")
             if box is None:
                 continue
-            xmin = float(box.findtext("xmin", "0")); ymin = float(box.findtext("ymin", "0"))
-            xmax = float(box.findtext("xmax", "0")); ymax = float(box.findtext("ymax", "0"))
-            box_w = max(0.0, xmax - xmin); box_h = max(0.0, ymax - ymin)
+            xmin = float(box.findtext("xmin", "0"))
+            ymin = float(box.findtext("ymin", "0"))
+            xmax = float(box.findtext("xmax", "0"))
+            ymax = float(box.findtext("ymax", "0"))
+            if not (0 <= xmin < xmax <= width and 0 <= ymin < ymax <= height):
+                raise ValueError(f"Geçersiz VOC kutusu: {xml_path}")
+            box_w = max(0.0, xmax - xmin)
+            box_h = max(0.0, ymax - ymin)
             if box_w == 0 or box_h == 0:
                 continue
-            labels.append(f"{CLASSES[code]} {(xmin + xmax) / 2 / width:.6f} {(ymin + ymax) / 2 / height:.6f} {box_w / width:.6f} {box_h / height:.6f}")
-        if not labels:
+            labels.append(
+                f"{CLASSES[code]} {(xmin + xmax) / 2 / width:.6f} {(ymin + ymax) / 2 / height:.6f} {box_w / width:.6f} {box_h / height:.6f}"
+            )
+        # Empty annotated scenes are valid negatives. Unknown/invalid objects
+        # must not silently become clean-road ground truth.
+        if not labels and root.findall("object"):
             continue
         split = split_for(str(image_path.relative_to(source)), validation_ratio)
         image_out = output / "images" / split / image_path.name
         label_out = output / "labels" / split / f"{image_path.stem}.txt"
-        image_out.parent.mkdir(parents=True, exist_ok=True); label_out.parent.mkdir(parents=True, exist_ok=True)
+        image_out.parent.mkdir(parents=True, exist_ok=True)
+        label_out.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(image_path, image_out)
         label_out.write_text("\n".join(labels) + "\n", encoding="utf-8")
         written[split] += 1
-    (output / "data.yaml").write_text("path: .\ntrain: images/train\nval: images/val\nnc: 4\nnames: [longitudinal_crack, transverse_crack, alligator_crack, pothole]\n", encoding="utf-8")
+    output.mkdir(parents=True, exist_ok=True)
+    (output / "data.yaml").write_text(
+        f"path: {output.resolve().as_posix()}\ntrain: images/train\nval: images/val\nnc: 4\nnames: [longitudinal_crack, transverse_crack, alligator_crack, pothole]\n",
+        encoding="utf-8",
+    )
     return written["train"], written["val"]
 
 
@@ -77,4 +94,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

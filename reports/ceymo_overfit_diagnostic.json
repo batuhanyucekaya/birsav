@@ -1,0 +1,19 @@
+{
+  "purpose": "pipeline_overfit_diagnostic_NOT_independent_test",
+  "image_sha256": "9c5f3de37d639645115bdab1869c6eedaa487581ba6f3015e5b10ccb1358a15f",
+  "epochs": 40,
+  "hardware": "cpu",
+  "imgsz": 640,
+  "seed": 0,
+  "augmentation": "disabled",
+  "pretrained": true,
+  "elapsed_seconds": 55.0042325000104,
+  "metrics": {
+    "metrics/precision(B)": 0.0,
+    "metrics/recall(B)": 0.0,
+    "metrics/mAP50(B)": 0.0,
+    "metrics/mAP50-95(B)": 0.0,
+    "fitness": 0.0
+  },
+  "best": "C:\\Users\\batuh\\OneDrive\\Belgeler\\ChatGPT\\birsav\\runs\\detect\\runs\\diagnostics\\ceymo_overfit_40\\weights\\best.pt"
+}

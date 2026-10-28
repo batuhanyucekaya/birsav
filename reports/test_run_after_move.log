@@ -1,0 +1,48 @@
+test_bad_ids_bounds_nan_polygon_and_full_frame (test_core.DatasetTests.test_bad_ids_bounds_nan_polygon_and_full_frame) ... ok
+test_decoded_duplicate_detection_across_splits (test_core.DatasetTests.test_decoded_duplicate_detection_across_splits) ... ok
+test_duplicate_polygons_flagged (test_core.DatasetTests.test_duplicate_polygons_flagged) ... ok
+test_promotion_requires_independent_provenance (test_core.DatasetTests.test_promotion_requires_independent_provenance) ... ok
+test_shared_mapillary_color_emits_one_polygon (test_core.DatasetTests.test_shared_mapillary_color_emits_one_polygon) ... ok
+test_threshold_selection_forbids_test_data_and_counts_missed_truth (test_core.DatasetTests.test_threshold_selection_forbids_test_data_and_counts_missed_truth) ... ok
+test_bad_coordinates_and_duplicate_times_rejected (test_core.GpsTests.test_bad_coordinates_and_duplicate_times_rejected) ... ok
+test_sorted_absolute_origin_and_interpolation (test_core.GpsTests.test_sorted_absolute_origin_and_interpolation) ... ok
+test_current_box_covered_despite_smoothed_lag (test_core.PrivacyTests.test_current_box_covered_despite_smoothed_lag) ... ok
+test_large_and_crowded_regions_are_not_discarded (test_core.PrivacyTests.test_large_and_crowded_regions_are_not_discarded) ... ok
+test_nonfinite_box_fails_closed (test_core.PrivacyTests.test_nonfinite_box_fails_closed) ... ok
+test_events_merge_and_do_not_increment_for_stale_track (test_core.TrackingTests.test_events_merge_and_do_not_increment_for_stale_track) ... ok
+test_ids_do_not_repeat_after_all_tracks_expire (test_core.TrackingTests.test_ids_do_not_repeat_after_all_tracks_expire) ... ok
+test_privacy_types_never_merge (test_core.TrackingTests.test_privacy_types_never_merge) ... ok
+test_two_objects_one_to_one (test_core.TrackingTests.test_two_objects_one_to_one) ... ok
+test_binary_upload (test_core.UploadTests.test_binary_upload) ... ok
+test_reject_before_reading_oversized_body (test_core.UploadTests.test_reject_before_reading_oversized_body) ... ok
+test_truncated_multipart_and_duplicate_fields (test_core.UploadTests.test_truncated_multipart_and_duplicate_fields) ... ok
+test_decoder_validates_all_frames (test_core.VideoTests.test_decoder_validates_all_frames) ... ok
+test_missing_model_cleanup_before_loop (test_core.VideoTests.test_missing_model_cleanup_before_loop) ... ok
+test_invalid_image_is_controlled_error (test_http.HttpTests.test_invalid_image_is_controlled_error) ... 127.0.0.1 - - [28/Oct/2026 10:00:40] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [28/Oct/2026 10:00:40] "POST /api/analyze HTTP/1.1" 400 -
+ok
+test_limit_checked_before_body (test_http.HttpTests.test_limit_checked_before_body) ... 127.0.0.1 - - [28/Oct/2026 10:00:41] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [28/Oct/2026 10:00:41] "POST /api/analyze-video HTTP/1.1" 413 -
+ok
+test_other_session_cannot_access_job_and_video (test_http.HttpTests.test_other_session_cannot_access_job_and_video) ... 127.0.0.1 - - [28/Oct/2026 10:00:41] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [28/Oct/2026 10:00:41] "GET /video-results/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.webm HTTP/1.1" 206 -
+127.0.0.1 - - [28/Oct/2026 10:00:41] "GET /api/jobs/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa HTTP/1.1" 401 -
+127.0.0.1 - - [28/Oct/2026 10:00:41] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [28/Oct/2026 10:00:41] "GET /api/jobs/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa HTTP/1.1" 404 -
+127.0.0.1 - - [28/Oct/2026 10:00:41] "GET /video-results/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.webm HTTP/1.1" 404 -
+ok
+test_queue_cancel_review_and_cleanup (test_http.HttpTests.test_queue_cancel_review_and_cleanup) ... 127.0.0.1 - - [28/Oct/2026 10:00:42] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [28/Oct/2026 10:00:42] "GET / HTTP/1.1" 200 -
+ok
+test_session_and_host_restrictions (test_http.HttpTests.test_session_and_host_restrictions) ... 127.0.0.1 - - [28/Oct/2026 10:00:42] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [28/Oct/2026 10:00:42] "GET /api/models HTTP/1.1" 401 -
+127.0.0.1 - - [28/Oct/2026 10:00:42] "GET / HTTP/1.1" 403 -
+127.0.0.1 - - [28/Oct/2026 10:00:42] "POST /api/analyze HTTP/1.1" 403 -
+ok
+
+----------------------------------------------------------------------
+Ran 25 tests in 3.101s
+
+OK
+OpenCV: FFMPEG: tag 0x30385056/'VP80' is not supported with codec id 139 and format 'webm / WebM'
+OpenCV: FFMPEG: tag 0x30385056/'VP80' is not supported with codec id 139 and format 'webm / WebM'

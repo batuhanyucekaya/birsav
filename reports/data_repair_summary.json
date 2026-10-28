@@ -1,0 +1,24 @@
+{
+  "ceymo_clean_v1": {
+    "splits": {
+      "train": 99,
+      "val": 1,
+      "test": 0
+    },
+    "label_errors": 0,
+    "label_reviews": 0,
+    "objects": 198,
+    "independent_test": false
+  },
+  "mapillary_seg_dedup_v1": {
+    "splits": {
+      "train": 629,
+      "val": 158,
+      "test": 0
+    },
+    "label_errors": 0,
+    "label_reviews": 0,
+    "objects": 19681,
+    "independent_test": false
+  }
+}

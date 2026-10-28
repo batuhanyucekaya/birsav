@@ -1,5 +1,7 @@
 # Kent Sorunları Tespit Sistemi — başlangıç teknik denetim raporu
 
+> Tarihsel başlangıç kaydıdır. Sunucu, gizlilik, kuyruk ve değerlendirme davranışlarının güncel durumu için [28 Ekim 2026 ilerleme raporuna](TECHNICAL_PROGRESS_20261028.md) bakın. Aşağıdaki eski test sonuçları yeni sürümün doğrulaması olarak kullanılamaz.
+
 ## Kapsam ve ölçüm tarihi
 
 İnceleme mevcut `src/demo_server.py`, `web/index.html`, model dosyaları ve veri hazırlama scriptleri üzerinden yapıldı. Başlangıç testi yerel sunucuda `tmp/test_video.mp4` (5 kare, 640×480) ile gerçekleştirildi.

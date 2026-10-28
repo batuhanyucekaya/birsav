@@ -1,5 +1,7 @@
 # GPS sınır kontrolü
 
+Güncel API, GPS kapsamı dışındaki video anlarına konum atamaz ve olaylarda konumu `camera_gps_estimate` olarak işaretler. Referans dosyası boşsa karşılaştırma yapılmaz. Yeni sonuç sözleşmesindeki `pixel_reference_exceeded` ve `within_pixel_reference` yalnızca görüntü pikseli karşılaştırmasıdır; fiziksel boyut veya mevzuata uygunluk kararı değildir. Eski `SINIR ASILDI/UYGUN` metinleri tarihsel demo davranışını anlatır.
+
 Video formuna isteğe bağlı GPS CSV eklenebilir. Desteklenen CSV biçimleri:
 
 ```csv

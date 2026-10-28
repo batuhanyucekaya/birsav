@@ -1,0 +1,67 @@
+{
+  "model": "C:\\Users\\batuh\\OneDrive\\Belgeler\\ChatGPT\\birsav\\runs\\classify\\runs\\container\\train\\weights\\best.pt",
+  "sha256": "5e903c9b1a1d18047c1cc34d77aa1ca79a45b7469deb1c18c9b4069da2d8e42d",
+  "data": "C:\\Users\\batuh\\OneDrive\\Belgeler\\ChatGPT\\birsav\\data\\container_dataset",
+  "split": "val",
+  "purpose": "development_validation_not_field_test",
+  "imgsz": 320,
+  "torch": "2.14.1+cpu",
+  "task": "classify",
+  "images": 3,
+  "names": {
+    "0": "empty",
+    "1": "full",
+    "2": "overflowing"
+  },
+  "accuracy": 0.6666666666666666,
+  "balanced_accuracy": 0.6666666666666666,
+  "macro_f1": 0.5555555555555555,
+  "confusion_matrix": [
+    [
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      1
+    ]
+  ],
+  "precision": [
+    0.0,
+    1.0,
+    0.5
+  ],
+  "recall": [
+    0.0,
+    1.0,
+    1.0
+  ],
+  "predictions": [
+    {
+      "image": "C:\\Users\\batuh\\OneDrive\\Belgeler\\ChatGPT\\birsav\\data\\container_dataset\\val\\empty\\empty1.jpg",
+      "true": 0,
+      "predicted": 2,
+      "confidence": 0.5207214951515198
+    },
+    {
+      "image": "C:\\Users\\batuh\\OneDrive\\Belgeler\\ChatGPT\\birsav\\data\\container_dataset\\val\\full\\full1.jpg",
+      "true": 1,
+      "predicted": 1,
+      "confidence": 0.5343430042266846
+    },
+    {
+      "image": "C:\\Users\\batuh\\OneDrive\\Belgeler\\ChatGPT\\birsav\\data\\container_dataset\\val\\overflowing\\2.jpg",
+      "true": 2,
+      "predicted": 2,
+      "confidence": 0.41438210010528564
+    }
+  ],
+  "elapsed_seconds": 0.30720280000241473
+}

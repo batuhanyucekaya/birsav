@@ -28,4 +28,8 @@ data/mapillary_seg_expanded/
 data/mapillary_seg_combined/
 data/mapillary_seg_building/
 yolo11n.pt
+data/ceymo_clean_v1/
+data/mapillary_seg_dedup_v1/
+data/container_localization_draft_v1/
+reports/validation_runs/
 

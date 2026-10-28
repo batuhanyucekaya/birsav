@@ -1,0 +1,84 @@
+{
+  "purpose": "real_weights_integration_on_synthetic_input_NOT_accuracy",
+  "checks": {
+    "/api/detect": {
+      "http_status": 200,
+      "elapsed_seconds": 3.5440434999909485,
+      "image_returned": true,
+      "issue_count": 6,
+      "privacy_status": "review_required"
+    },
+    "/api/analyze": {
+      "http_status": 200,
+      "elapsed_seconds": 2.535649600002216,
+      "image_returned": true,
+      "issue_count": 9,
+      "privacy_status": "review_required"
+    },
+    "/api/container-classify": {
+      "http_status": 200,
+      "elapsed_seconds": 0.3072210999962408,
+      "image_returned": true,
+      "issue_count": 3,
+      "privacy_status": "review_required"
+    },
+    "static_during_video": true,
+    "video": {
+      "state": "review_required",
+      "result": {
+        "frames": 5,
+        "output_frames": 5,
+        "timing_conversion": {
+          "mode": "pts_resampled_to_cfr",
+          "variable_intervals_detected": false,
+          "output_frames": 5,
+          "duplicated_frames": 0,
+          "dropped_frames": 0,
+          "estimated_source_duration_seconds": 1.0,
+          "output_duration_seconds": 1.0,
+          "duration_rounding_error_seconds": 0.0,
+          "last_frame_duration_source": "median_of_last_positive_pts_intervals"
+        },
+        "fps": 5.0,
+        "sample_fps": 3,
+        "counts": {
+          "privacy_frames": 0,
+          "faces_blurred": 0,
+          "plates_blurred": 0,
+          "road_damage": 0,
+          "ground_litter": 0,
+          "scene": 0,
+          "lane_markings": 0,
+          "containers": 0
+        },
+        "events": [],
+        "gps_enabled": true,
+        "reference_limits_loaded": false,
+        "privacy_status": "review_required",
+        "review_required": true,
+        "output_validation": {
+          "fully_decoded": true,
+          "frames": 5,
+          "fps": 5.0,
+          "duration_seconds": 1.0,
+          "ffprobe": null
+        },
+        "privacy_note": "Tespit edilen yüz/plakalar opak maskelendi. Dedektör başarımı doğrulanmadı; yerel gizlilik incelemesi gerekli. Ses aktarılmaz.",
+        "count_note": "Sayılar takip adaylarıdır; aynı fiziksel olayın yeniden ID alması hâlâ mümkün.",
+        "timing": {
+          "total_seconds": 2.4258283999952255,
+          "analysis_seconds": 2.121893800009275
+        },
+        "timestamp_source": "opencv_pos_msec",
+        "gps_alignment": "first_absolute_gps_row_is_video_zero",
+        "preview_url": "/video-results/febff4ddea6841c9b7904bac6530d68b.webm"
+      },
+      "output_bytes": 1038,
+      "raw_files_remaining": 0
+    },
+    "broken_video": {
+      "state": "failed",
+      "raw_files_remaining": 0
+    }
+  }
+}

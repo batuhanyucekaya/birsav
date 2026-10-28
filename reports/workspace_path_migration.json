@@ -1,0 +1,54 @@
+{
+  "workspace": "E:\\birsav",
+  "changes": [
+    {
+      "config": "data\\ceymo_clean_v1\\data.yaml",
+      "old_path": "C:/Users/batuh/OneDrive/Belgeler/ChatGPT/birsav/data/ceymo_clean_v1",
+      "new_path": "E:/birsav/data/ceymo_clean_v1",
+      "original_yaml": "path: C:/Users/batuh/OneDrive/Belgeler/ChatGPT/birsav/data/ceymo_clean_v1\ntrain: images/train\nval: images/val\nnc: 11\nnames:\n  0: bus_lane\n  1: cycle_lane\n  2: diamond\n  3: junction_box\n  4: left_arrow\n  5: pedestrian_crossing\n  6: right_arrow\n  7: straight_arrow\n  8: slow\n  9: straight_left_arrow\n  10: straight_right_arrow\n"
+    },
+    {
+      "config": "data\\ceymo_small\\data.yaml",
+      "old_path": "C:/Users/batuh/OneDrive/Belgeler/ChatGPT/birsav/data/ceymo_small",
+      "new_path": "E:/birsav/data/ceymo_small",
+      "original_yaml": "path: C:/Users/batuh/OneDrive/Belgeler/ChatGPT/birsav/data/ceymo_small\ntrain: images/train\nval: images/val\nnc: 11\nnames:\n  0: bus_lane\n  1: cycle_lane\n  2: diamond\n  3: junction_box\n  4: left_arrow\n  5: pedestrian_crossing\n  6: right_arrow\n  7: straight_arrow\n  8: slow\n  9: straight_left_arrow\n  10: straight_right_arrow\n"
+    },
+    {
+      "config": "data\\container_detection\\data.yaml",
+      "old_path": "C:/Users/batuh/OneDrive/Belgeler/ChatGPT/birsav/data/container_detection",
+      "new_path": "E:/birsav/data/container_detection",
+      "original_yaml": "path: C:/Users/batuh/OneDrive/Belgeler/ChatGPT/birsav/data/container_detection\ntrain: images/train\nval: images/val\nnc: 3\nnames: [empty, full, overflowing]\n"
+    },
+    {
+      "config": "data\\mapillary_seg\\data.yaml",
+      "old_path": "C:/Users/batuh/OneDrive/Belgeler/ChatGPT/birsav/data/mapillary_seg",
+      "new_path": "E:/birsav/data/mapillary_seg",
+      "original_yaml": "path: C:/Users/batuh/OneDrive/Belgeler/ChatGPT/birsav/data/mapillary_seg\ntrain: images/train\nval: images/val\nnc: 6\nnames: ['road', 'sidewalk', 'lane_marking', 'trash_can', 'billboard', 'sign']\n"
+    },
+    {
+      "config": "data\\mapillary_seg_building\\data.yaml",
+      "old_path": "C:/Users/batuh/OneDrive/Belgeler/ChatGPT/birsav/data/mapillary_seg_building",
+      "new_path": "E:/birsav/data/mapillary_seg_building",
+      "original_yaml": "path: C:/Users/batuh/OneDrive/Belgeler/ChatGPT/birsav/data/mapillary_seg_building\ntrain: images/train\nval: images/val\nnc: 7\nnames: ['road', 'sidewalk', 'lane_marking', 'trash_can', 'billboard', 'sign', 'building']\n"
+    },
+    {
+      "config": "data\\mapillary_seg_combined\\data.yaml",
+      "old_path": "C:/Users/batuh/OneDrive/Belgeler/ChatGPT/birsav/data/mapillary_seg_combined",
+      "new_path": "E:/birsav/data/mapillary_seg_combined",
+      "original_yaml": "path: C:/Users/batuh/OneDrive/Belgeler/ChatGPT/birsav/data/mapillary_seg_combined\ntrain: images/train\nval: images/val\nnc: 6\nnames: [road, sidewalk, lane_marking, trash_can, billboard, sign]\n"
+    },
+    {
+      "config": "data\\mapillary_seg_dedup_v1\\data.yaml",
+      "old_path": "C:/Users/batuh/OneDrive/Belgeler/ChatGPT/birsav/data/mapillary_seg_dedup_v1",
+      "new_path": "E:/birsav/data/mapillary_seg_dedup_v1",
+      "original_yaml": "path: C:/Users/batuh/OneDrive/Belgeler/ChatGPT/birsav/data/mapillary_seg_dedup_v1\ntrain: images/train\nval: images/val\nnc: 6\nnames:\n- road\n- sidewalk\n- lane_marking\n- trash_can\n- billboard\n- sign\n"
+    },
+    {
+      "config": "data\\mapillary_seg_expanded\\data.yaml",
+      "old_path": "C:/Users/batuh/OneDrive/Belgeler/ChatGPT/birsav/data/mapillary_seg_expanded",
+      "new_path": "E:/birsav/data/mapillary_seg_expanded",
+      "original_yaml": "path: C:/Users/batuh/OneDrive/Belgeler/ChatGPT/birsav/data/mapillary_seg_expanded\ntrain: images/train\nval: images/val\nnc: 6\nnames: ['road', 'sidewalk', 'lane_marking', 'trash_can', 'billboard', 'sign']\n"
+    }
+  ],
+  "historical_training_metadata_modified": false
+}

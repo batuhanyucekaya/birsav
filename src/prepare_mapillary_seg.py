@@ -11,7 +11,6 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-
 SRC = Path("data/mapillary_small")
 OUT = Path("data/mapillary_seg")
 # YOLO sınıfları: yol, kaldırım, şerit/işaret, konteyner, pano ve tabela.
@@ -25,31 +24,63 @@ TARGETS = {
     **{i: 5 for i in [79, 80, 81, 82, 83, *range(96, 104)]},
 }
 NAMES = ["road", "sidewalk", "lane_marking", "trash_can", "billboard", "sign"]
-CONFIG = json.loads((SRC / "config_v2.0.json").read_text(encoding="utf-8"))
-COLORS = {i: tuple(reversed(item["color"])) for i, item in enumerate(CONFIG["labels"])}
+
+
+def semantic_polygons(mask, targets, colors):
+    """Union shared colors per destination class; one contour must not be emitted N times."""
+    if mask.ndim != 3 or mask.shape[2] != 3:
+        raise ValueError(
+            "RGB semantic mask required; ID masks need an explicit decoder"
+        )
+    grouped = {}
+    color_targets = {}
+    for source_id, target_id in targets.items():
+        color = tuple(colors[source_id])
+        if color in color_targets and color_targets[color] != target_id:
+            raise ValueError("One RGB color maps to different target classes")
+        color_targets[color] = target_id
+        grouped.setdefault(target_id, set()).add(color)
+    height, width = mask.shape[:2]
+    lines = []
+    for target_id, class_colors in sorted(grouped.items()):
+        binary = np.zeros((height, width), dtype=np.uint8)
+        for color in class_colors:
+            binary |= np.all(mask == np.array(color, dtype=np.uint8), axis=2).astype(
+                np.uint8
+            )
+        contours, _ = cv2.findContours(
+            binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+        )
+        for contour in contours:
+            if cv2.contourArea(contour) < 30 or len(contour) < 3:
+                continue
+            polygon = cv2.approxPolyDP(
+                contour, max(1.0, 0.002 * cv2.arcLength(contour, True)), True
+            ).reshape(-1, 2)
+            if len(polygon) >= 3:
+                lines.append(
+                    f"{target_id} "
+                    + " ".join(f"{x/width:.6f} {y/height:.6f}" for x, y in polygon)
+                )
+    return lines
 
 
 def convert_mask(mask_path: Path, label_path: Path) -> None:
+    config = json.loads((SRC / "config_v2.0.json").read_text(encoding="utf-8"))
+    colors = {
+        i: tuple(reversed(item["color"])) for i, item in enumerate(config["labels"])
+    }
     mask = cv2.imread(str(mask_path), cv2.IMREAD_UNCHANGED)
     if mask is None:
         return
     scale = min(1.0, 1024.0 / max(mask.shape[:2]))
     if scale < 1.0:
-        mask = cv2.resize(mask, (int(mask.shape[1] * scale), int(mask.shape[0] * scale)), interpolation=cv2.INTER_NEAREST)
-    height, width = mask.shape[:2]
-    lines = []
-    for source_id, target_id in TARGETS.items():
-        binary = np.all(mask == np.array(COLORS[source_id], dtype=np.uint8), axis=2).astype(np.uint8)
-        contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        for contour in contours:
-            if cv2.contourArea(contour) < 30 or len(contour) < 3:
-                continue
-            epsilon = max(1.0, 0.002 * cv2.arcLength(contour, True))
-            polygon = cv2.approxPolyDP(contour, epsilon, True).reshape(-1, 2)
-            if len(polygon) < 3:
-                continue
-            coords = " ".join(f"{x / width:.6f} {y / height:.6f}" for x, y in polygon)
-            lines.append(f"{target_id} {coords}")
+        mask = cv2.resize(
+            mask,
+            (int(mask.shape[1] * scale), int(mask.shape[0] * scale)),
+            interpolation=cv2.INTER_NEAREST,
+        )
+    lines = semantic_polygons(mask, TARGETS, colors)
     label_path.write_text("\n".join(lines), encoding="utf-8")
 
 
@@ -57,21 +88,29 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=Path, default=SRC)
     parser.add_argument("--output", type=Path, default=OUT)
-    parser.add_argument("--include-building", action="store_true", help="Mapillary Building sınıfını 7. sınıf olarak ekle")
+    parser.add_argument(
+        "--include-building",
+        action="store_true",
+        help="Mapillary Building sınıfını 7. sınıf olarak ekle",
+    )
     args = parser.parse_args()
     source, output = args.source, args.output
     config_path = source / "config_v2.0.json"
     if not config_path.exists():
         config_path = SRC / "config_v2.0.json"
     config = json.loads(config_path.read_text(encoding="utf-8"))
-    colors = {i: tuple(reversed(item["color"])) for i, item in enumerate(config["labels"])}
+    colors = {
+        i: tuple(reversed(item["color"])) for i, item in enumerate(config["labels"])
+    }
     targets = dict(TARGETS)
     names = list(NAMES)
     if args.include_building:
         targets[27] = 6  # construction--structure--building
         names.append("building")
-    if output.exists():
-        shutil.rmtree(output)
+    if output.exists() and any(output.iterdir()):
+        raise SystemExit(
+            "Çıktı klasörü dolu; mevcut etiketler silinmeyecek. Yeni sürüm klasörü seçin."
+        )
     images = sorted((source / "training" / "images").glob("*.jpg"))
     random.Random(42).shuffle(images)
     split_at = max(1, int(len(images) * 0.8))
@@ -89,18 +128,12 @@ def main() -> None:
                 continue
             scale = min(1.0, 1024.0 / max(mask.shape[:2]))
             if scale < 1.0:
-                mask = cv2.resize(mask, (int(mask.shape[1] * scale), int(mask.shape[0] * scale)), interpolation=cv2.INTER_NEAREST)
-            height, width = mask.shape[:2]
-            lines = []
-            for source_id, target_id in targets.items():
-                binary = np.all(mask == np.array(colors[source_id], dtype=np.uint8), axis=2).astype(np.uint8)
-                contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                for contour in contours:
-                    if cv2.contourArea(contour) < 30 or len(contour) < 3:
-                        continue
-                    polygon = cv2.approxPolyDP(contour, max(1.0, 0.002 * cv2.arcLength(contour, True)), True).reshape(-1, 2)
-                    if len(polygon) >= 3:
-                        lines.append(f"{target_id} " + " ".join(f"{x / width:.6f} {y / height:.6f}" for x, y in polygon))
+                mask = cv2.resize(
+                    mask,
+                    (int(mask.shape[1] * scale), int(mask.shape[0] * scale)),
+                    interpolation=cv2.INTER_NEAREST,
+                )
+            lines = semantic_polygons(mask, targets, colors)
             label_path.write_text("\n".join(lines), encoding="utf-8")
     (output / "data.yaml").write_text(
         f"path: {output.resolve().as_posix()}\ntrain: images/train\nval: images/val\nnc: {len(names)}\nnames: {names}\n",

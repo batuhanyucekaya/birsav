@@ -1,0 +1,23 @@
+{
+  "purpose": "pipeline_overfit_diagnostic_NOT_independent_test",
+  "image_sha256": "9c5f3de37d639645115bdab1869c6eedaa487581ba6f3015e5b10ccb1358a15f",
+  "epochs": 80,
+  "hardware": "cpu",
+  "imgsz": 640,
+  "seed": 0,
+  "augmentation": "disabled",
+  "pretrained": true,
+  "nbs": 1,
+  "freeze_bn": true,
+  "lr": 0.0001,
+  "elapsed_seconds": 84.74456459999783,
+  "metrics": {
+    "metrics/precision(B)": 0.9714174613527582,
+    "metrics/recall(B)": 1.0,
+    "metrics/mAP50(B)": 0.995,
+    "metrics/mAP50-95(B)": 0.9950000000000001,
+    "fitness": 0.9950000000000001
+  },
+  "best": "C:\\Users\\batuh\\.codex\\tmp\\birsav-final-verification-20261028\\diagnostics\\ceymo_overfit_80_nbs1_bnTrue_lr0.0001\\weights\\best.pt",
+  "copied_run_directory": "E:\\birsav\\runs\\diagnostics\\ceymo_overfit_low_lr_completed"
+}

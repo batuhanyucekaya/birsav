@@ -1,0 +1,49 @@
+{
+  "model": "C:\\Users\\batuh\\OneDrive\\Belgeler\\ChatGPT\\birsav\\runs\\detect\\runs\\ceymo_small\\train20_cpu\\weights\\best.pt",
+  "sha256": "83dc81bb3d379ad5bc8466088736f44366d778bb6ba106d22e509aac80394133",
+  "data": "C:\\Users\\batuh\\OneDrive\\Belgeler\\ChatGPT\\birsav\\data\\ceymo_small\\data.yaml",
+  "split": "val",
+  "purpose": "development_validation_not_field_test",
+  "imgsz": 320,
+  "torch": "2.14.1+cpu",
+  "task": "detect",
+  "images": 1,
+  "metrics": {
+    "metrics/precision(B)": 0.0,
+    "metrics/recall(B)": 0.0,
+    "metrics/mAP50(B)": 0.0,
+    "metrics/mAP50-95(B)": 0.0,
+    "fitness": 0.0
+  },
+  "per_class": [
+    {
+      "Class": "left_arrow",
+      "Images": "1",
+      "Instances": "1",
+      "Box-P": 0.0,
+      "Box-R": 0.0,
+      "Box-F1": 0.0,
+      "mAP50": 0.0,
+      "mAP75": 0.0,
+      "mAP50-95": 0.0
+    },
+    {
+      "Class": "straight_arrow",
+      "Images": "1",
+      "Instances": "1",
+      "Box-P": 0.0,
+      "Box-R": 0.0,
+      "Box-F1": 0.0,
+      "mAP50": 0.0,
+      "mAP75": 0.0,
+      "mAP50-95": 0.0
+    }
+  ],
+  "speed_ms_per_image": {
+    "preprocess": 0.47080000513233244,
+    "inference": 81.00949999061413,
+    "loss": 0.0016999983927235007,
+    "postprocess": 13.490500001353212
+  },
+  "elapsed_seconds": 3.8183994999999413
+}

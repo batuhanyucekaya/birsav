@@ -1,0 +1,12 @@
+{
+  "purpose": "synthetic_logic_regression_NOT_video_tracking_accuracy",
+  "id_after_expiration": {
+    "before": 1,
+    "after": 2
+  },
+  "face_to_plate_types": {
+    "before_tracks": 1,
+    "after_tracks": 2
+  },
+  "overlapping_face_plate_dedup_before": 1
+}

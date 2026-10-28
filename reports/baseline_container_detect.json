@@ -1,0 +1,60 @@
+{
+  "model": "C:\\Users\\batuh\\OneDrive\\Belgeler\\ChatGPT\\birsav\\runs\\detect\\runs\\container_detection\\train\\weights\\best.pt",
+  "sha256": "ebcadc77c6f0ce044741abe0392f893ca9bde1262be25b0978c4dd4018af875a",
+  "data": "C:\\Users\\batuh\\OneDrive\\Belgeler\\ChatGPT\\birsav\\data\\container_detection\\data.yaml",
+  "split": "val",
+  "purpose": "development_validation_not_field_test",
+  "imgsz": 320,
+  "torch": "2.14.1+cpu",
+  "task": "detect",
+  "images": 4,
+  "metrics": {
+    "metrics/precision(B)": 0.9091973011191437,
+    "metrics/recall(B)": 0.6666666666666666,
+    "metrics/mAP50(B)": 0.7959999999999999,
+    "metrics/mAP50-95(B)": 0.7777166666666666,
+    "fitness": 0.7777166666666666
+  },
+  "per_class": [
+    {
+      "Class": "empty",
+      "Images": "1",
+      "Instances": "1",
+      "Box-P": 0.77706,
+      "Box-R": 1.0,
+      "Box-F1": 0.87455,
+      "mAP50": 0.995,
+      "mAP75": 0.995,
+      "mAP50-95": 0.995
+    },
+    {
+      "Class": "full",
+      "Images": "1",
+      "Instances": "1",
+      "Box-P": 0.95053,
+      "Box-R": 1.0,
+      "Box-F1": 0.97464,
+      "mAP50": 0.995,
+      "mAP75": 0.995,
+      "mAP50-95": 0.995
+    },
+    {
+      "Class": "overflowing",
+      "Images": "2",
+      "Instances": "2",
+      "Box-P": 1.0,
+      "Box-R": 0.0,
+      "Box-F1": 0.0,
+      "mAP50": 0.398,
+      "mAP75": 0.398,
+      "mAP50-95": 0.34315
+    }
+  ],
+  "speed_ms_per_image": {
+    "preprocess": 3.8799250032752752,
+    "inference": 56.0144999944896,
+    "loss": 0.0015749974409118295,
+    "postprocess": 4.943924999679439
+  },
+  "elapsed_seconds": 3.123811100012972
+}

@@ -1,0 +1,41 @@
+{
+  "True": {
+    "boxes": 300,
+    "max_conf": 1.0,
+    "classes": [
+      7.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0
+    ]
+  },
+  "False": {
+    "boxes": 300,
+    "max_conf": 1.0,
+    "classes": [
+      7.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0,
+      4.0
+    ]
+  },
+  "square_validation": {
+    "metrics/precision(B)": 0.0,
+    "metrics/recall(B)": 0.0,
+    "metrics/mAP50(B)": 0.0,
+    "metrics/mAP50-95(B)": 0.0,
+    "fitness": 0.0
+  }
+}
